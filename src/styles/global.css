@@ -312,6 +312,10 @@ h1 {
 }
 
 @media (max-width: 1239px) {
+	.shell {
+		padding-left: 2.75rem;
+	}
+
 	.rail {
 		position: fixed;
 		top: 0;
