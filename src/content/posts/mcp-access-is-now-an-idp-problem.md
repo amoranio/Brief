@@ -2,6 +2,10 @@
 title: MCP access is now an IdP problem
 date: 2026-08-29
 dek: Enterprise-managed auth moves the privilege decision off the consent screen and onto identity policy. The blast radius moves with it.
+tags:
+  - identity
+  - mcp
+  - authorization
 sources:
   - https://blog.modelcontextprotocol.io/posts/enterprise-managed-auth/
   - https://github.com/modelcontextprotocol/modelcontextprotocol/blob/main/docs/extensions/auth/enterprise-managed-authorization.mdx
@@ -12,6 +16,14 @@ sources:
 The MCP Enterprise-Managed Authorization extension is now stable. Anthropic, Microsoft, Okta, and a first wave of servers have adopted it. That is an architecture change, not a convenience feature.
 
 Until recently, most MCP access was a per-user, per-server OAuth consent. The privilege decision sat with the person in the chat. EMA moves it: the enterprise identity provider is the decision-maker. The client obtains an Identity Assertion JWT Authorization Grant (ID-JAG) from the IdP and exchanges it for an access token at the MCP server's authorization server. There is no per-server consent screen.
+
+```mermaid
+%% caption: The privilege decision sits at the IdP, not on a consent screen
+flowchart LR
+  client[MCP client] --> idp[IdP policy]
+  idp --> jag[ID-JAG]
+  jag --> server[MCP server]
+```
 
 Three properties fall out of that. Admins authorize a server once and users inherit access by existing groups and roles. Revocation happens once at the IdP and applies everywhere. Removing the account picker makes it harder to spill data between a personal account and an enterprise one.
 

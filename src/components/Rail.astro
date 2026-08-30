@@ -1,0 +1,72 @@
+---
+import type { Post } from '../lib/collection';
+import { isoDate } from '../lib/collection';
+import { formatShortDate } from '../lib/dates';
+
+interface Props {
+	posts: Post[];
+	tags: string[];
+	pathname: string;
+}
+
+const { posts, tags, pathname } = Astro.props;
+
+function here(href: string): boolean {
+	const path = pathname.endsWith('/') ? pathname : `${pathname}/`;
+	return path === href;
+}
+---
+
+<aside id="index" class="rail">
+	<div class="rail-head">
+		<a class="rail-dismiss" href="#">Close</a>
+		<label class="rail-hide" for="rail-collapse">Hide</label>
+	</div>
+
+	<p class="rail-kicker">Posts</p>
+	<ol class="rail-posts">
+		{
+			posts.map((post) => {
+				const href = `/${post.id}/`;
+				return (
+					<li>
+						<a href={href} aria-current={here(href) ? 'page' : undefined}>
+							<time datetime={isoDate(post.data.date)}>{formatShortDate(post.data.date)}</time>
+							<span>{post.data.title}</span>
+						</a>
+					</li>
+				);
+			})
+		}
+	</ol>
+
+	<p class="rail-kicker">Tags</p>
+	<ul class="rail-tags">
+		{
+			tags.map((tag) => {
+				const href = `/tags/${tag}/`;
+				return (
+					<li>
+						<a href={href} aria-current={here(href) ? 'page' : undefined}>
+							{tag}
+						</a>
+					</li>
+				);
+			})
+		}
+	</ul>
+
+	<p class="rail-kicker">Site</p>
+	<ul class="rail-site">
+		<li>
+			<a href="/about/" aria-current={here('/about/') ? 'page' : undefined}>About</a>
+		</li>
+		<li>
+			<a href="/rss.xml">RSS</a>
+		</li>
+	</ul>
+</aside>
+
+<a class="rail-edge" href="#index">Index</a>
+<label class="rail-tab" for="rail-collapse">Index</label>
+<a class="rail-scrim" href="#" aria-hidden="true"></a>

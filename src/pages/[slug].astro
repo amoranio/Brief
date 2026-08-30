@@ -2,6 +2,7 @@
 import { getCollection, render } from 'astro:content';
 import type { CollectionEntry } from 'astro:content';
 import Base from '../layouts/Base.astro';
+import { isoDate } from '../lib/collection';
 import { formatDate } from '../lib/dates';
 
 export async function getStaticPaths() {
@@ -23,9 +24,18 @@ const { Content } = await render(post);
 <Base title={`${post.data.title} · Brief`} description={post.data.dek}>
 	<article>
 		<div class="date">
-			<time datetime={post.data.date.toISOString().slice(0, 10)}>{formatDate(post.data.date)}</time>
+			<time datetime={isoDate(post.data.date)}>{formatDate(post.data.date)}</time>
 		</div>
 		<h1>{post.data.title}</h1>
+		<ul class="tags">
+			{
+				post.data.tags.map((tag) => (
+					<li>
+						<a href={`/tags/${tag}/`}>{tag}</a>
+					</li>
+				))
+			}
+		</ul>
 		<div class="body">
 			<Content />
 		</div>
