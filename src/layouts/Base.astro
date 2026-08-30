@@ -1,5 +1,7 @@
 ---
 import '../styles/global.css';
+import Rail from '../components/Rail.astro';
+import { allTags, getPosts } from '../lib/collection';
 
 interface Props {
 	title: string;
@@ -8,6 +10,8 @@ interface Props {
 
 const { title, description } = Astro.props;
 const canonical = new URL(Astro.url.pathname, Astro.site);
+const posts = await getPosts();
+const tags = allTags(posts);
 ---
 
 <!doctype html>
@@ -21,6 +25,8 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
 		<link rel="alternate" type="application/rss+xml" title="Brief" href={new URL('rss.xml', Astro.site)} />
 	</head>
 	<body>
+		<input type="checkbox" id="rail-collapse" class="rail-collapse" />
+		<Rail posts={posts} tags={tags} pathname={Astro.url.pathname} />
 		<div class="shell">
 			<header class="masthead">
 				<a class="wordmark" href="/">Brief.</a>
