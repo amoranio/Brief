@@ -1,8 +1,8 @@
 :root {
-	--bg: #f7f6f3;
+	--bg: #faf6ed;
 	--fg: #111111;
 	--muted: #5c5c5c;
-	--rule: #d6d4cf;
+	--rule: #e5dfd3;
 	--measure: 64ch;
 }
 
@@ -348,7 +348,7 @@ h1 {
 		position: fixed;
 		inset: 0;
 		z-index: 25;
-		background: rgb(247 246 243 / 0.72);
+		background: rgb(250 246 237 / 0.72);
 	}
 }
 
