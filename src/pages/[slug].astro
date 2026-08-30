@@ -1,0 +1,47 @@
+---
+import { getCollection, render } from 'astro:content';
+import type { CollectionEntry } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import { formatDate } from '../lib/dates';
+
+export async function getStaticPaths() {
+	const posts = await getCollection('posts');
+	return posts.map((post) => ({
+		params: { slug: post.id },
+		props: { post },
+	}));
+}
+
+interface Props {
+	post: CollectionEntry<'posts'>;
+}
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+---
+
+<Base title={`${post.data.title} · Brief`} description={post.data.dek}>
+	<article>
+		<div class="date">
+			<time datetime={post.data.date.toISOString().slice(0, 10)}>{formatDate(post.data.date)}</time>
+		</div>
+		<h1>{post.data.title}</h1>
+		<div class="body">
+			<Content />
+		</div>
+		{
+			post.data.sources.length > 0 && (
+				<section class="sources">
+					<h2>Sources</h2>
+					<ol>
+						{post.data.sources.map((href) => (
+							<li>
+								<a href={href}>{href}</a>
+							</li>
+						))}
+					</ol>
+				</section>
+			)
+		}
+	</article>
+</Base>
