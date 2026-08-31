@@ -27,6 +27,6 @@ flowchart LR
   horizon --> defect[Server defects]
 ```
 
-Shield is the architectural reply in the paper. It is not a product review. It sits on the MCP connection. It runs before the host trusts the payload. During the clean window it learns what replies look like. Later it compares new payloads to that baseline. The paper measured high success for TrustShift across frontier models. A transport monitor reduced it. Those figures are the paper's measurement, not Brief's claim.
+Shield is the paper's proposed monitor. This is not a product review. Shield sits on the MCP connection. It runs before the host trusts the payload. During the clean window it learns what replies look like. Later it compares new payloads to that baseline. The paper measured high success for TrustShift across frontier models. A transport monitor reduced that attack's success rate. Those figures are the paper's measurement, not Brief's claim.
 
-TrustShiftProbe is the evaluation framework. The authors are Rostamzadeh, Narula, Ghasemigol, and Takabi. The work is submitted to IEEE. The control you do not have yet is a runtime baseline. Trust at t=0 is not trust at t=N.
+TrustShiftProbe is the evaluation framework. The authors are Rostamzadeh, Narula, Ghasemigol, and Takabi. The work is submitted to IEEE. The control you do not have yet is a runtime baseline. Trust at the first interaction is not trust after N of them.
