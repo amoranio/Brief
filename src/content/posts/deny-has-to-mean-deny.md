@@ -11,7 +11,7 @@ sources:
   - https://github.com/responsibleai/agent-hooks
 ---
 
-Production agents have tools, credentials, and autonomy, so policies have to be enforced, an approval has to stop the action until a human lifts it, and there has to be evidence of what ran. Most framework callbacks were built to watch that loop, and watching is not governance.
+Production agents have tools, credentials, and autonomy, which means policies have to be enforced. An approval has to stop the action until a human lifts it, and there has to be evidence of what ran. Most framework callbacks were built to watch that loop, and watching is not governance.
 
 A support agent could look up accounts and issue refunds, and refunds over a threshold needed a human to approve them. The approval guard threw an exception on a malformed request; the dispatcher caught it, logged a warning, and issued the refund, which the framework documents as the default: if the guard throws, the refund still runs. A batch entry point never fired the callback at all. Nothing bound either guard to the action that actually ran.
 

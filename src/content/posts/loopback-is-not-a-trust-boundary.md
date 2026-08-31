@@ -10,7 +10,7 @@ sources:
   - https://www.cyera.com/research/nemoclaw-one-website-visit-to-hijack-your-ai-agent
 ---
 
-NVIDIA NemoClaw, as published by Cyera, deploys OpenClaw in OpenShell Docker sandboxes, and because the container cannot reach `127.0.0.1` on the host, NemoClaw starts Ollama with `OLLAMA_HOST=0.0.0.0:11434`. That bind listens on every interface; it is not loopback.
+NVIDIA NemoClaw deploys OpenClaw in OpenShell Docker sandboxes, and because the container cannot reach `127.0.0.1` on the host, NemoClaw starts Ollama with `OLLAMA_HOST=0.0.0.0:11434`. That bind listens on every interface; it is not loopback.
 
 The installer prints `Using Ollama on localhost:11434`, but the socket is not bound to localhost only. Ollama’s API on port 11434 has no authentication, so CORS and Host validation are the defenses. Ollama checks the Host header so a webpage cannot pretend to be local, but that check is skipped when the bind is not loopback, which means binding to `0.0.0.0` drops it.
 
