@@ -11,7 +11,7 @@ sources:
   - https://github.com/responsibleai/agent-hooks
 ---
 
-This contract can prove that a host stopped an action. That only works if the host actually asks the contract first.
+Agent Hooks is a contract between a host and a set of interceptors. It can prove that a host stopped an action. That only works if the host actually asks first.
 
 Agent Hooks interceptors run in the same process as the host. They can see every field that process already holds. Registering an interceptor lets it change or stop every action the agent takes. That is the right shape for a contract with a trusted runtime. It is the wrong shape for a wall.
 
