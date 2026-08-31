@@ -14,7 +14,7 @@ sources:
 
 An agent can be allowed to read confidential files. It can also be allowed to send external email. Each permission is fine on its own. Together they can still leak the files. That is a confused-deputy problem.
 
-Checking each tool call against a list of allowed tools is not enough. Each call can stay inside policy. The session can still be the attack. The missing control is a rule about pairs. If the session has already read a confidential file, it must not also send that file out. The paper names this composition closure. Prohibited pairs are checked against what the session has already done. That check runs outside the model.
+Checking each tool call against a list of allowed tools is not enough. Each call can stay inside policy. The session can still be the attack. The missing control is a rule about pairs. If the session has already read a confidential file, it must not also send that file out. Muruaga's Bounded Agents paper names this composition closure. Prohibited pairs are checked against what the session has already done. That check runs outside the model.
 
 ```mermaid
 %% caption: Two allowed tools combine into exfil; a gate that sees the pair can block it
