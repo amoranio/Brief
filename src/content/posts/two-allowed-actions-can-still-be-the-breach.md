@@ -12,12 +12,12 @@ sources:
   - https://github.com/aws-samples/sample-agentic-delegation
 ---
 
-An agent allowed to read confidential files and send external email can combine them into exfiltration without violating either permission. That is confused deputy at the level of action composition.
+An agent can be allowed to read confidential files. It can also be allowed to send external email. Each permission is fine on its own. Together they can still leak the files. That is a confused-deputy problem.
 
-Per-action authorization is structurally insufficient. Each tool call can be in policy while the session is the attack. The missing control is composition closure: prohibited combinations evaluated over session history, outside the model.
+Checking each tool call against a list of allowed tools is not enough. Each call can stay inside policy. The session can still be the attack. The missing control is a rule about pairs. If the session has already read a confidential file, it must not also send that file out. The paper names this composition closure. Prohibited pairs are checked against what the session has already done. That check runs outside the model.
 
 ```mermaid
-%% caption: Two allowed tools combining into exfil versus a composition gate that blocks the pair
+%% caption: Two allowed tools combine into exfil; a gate that sees the pair can block it
 flowchart LR
   subgraph open [Per-tool allow]
     read1[Read] --> exfil[Exfil]
@@ -30,8 +30,8 @@ flowchart LR
   end
 ```
 
-Prompt injection's security consequence is largely this architecture problem. If the combination cannot execute at the infrastructure layer, the injection cannot complete the theft. The model can still be manipulated. The pair cannot run.
+Prompt injection matters here because the pair of tools can still run. If the infrastructure refuses the pair, the injection cannot finish the theft. The model can still be manipulated. The pair cannot run.
 
-Blast radius should only shrink down a delegation chain, never expand. AWS's Cedar sample for agentic delegation makes the same structural point: at each hop, permissions only narrow.
+When one agent hands work to another, the second should not gain more power than the first. Blast radius should shrink along that chain. It should never grow. AWS has a Cedar sample for agents that hand work down a chain. It makes the same structural point. At each hop, permissions only narrow.
 
 If your allowlist is a list of tools, you have described the parts. You have not described the session.
