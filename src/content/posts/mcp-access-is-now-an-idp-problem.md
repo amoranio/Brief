@@ -1,7 +1,7 @@
 ---
 title: MCP access is now an IdP problem
 date: 2026-08-29
-dek: Enterprise-managed auth moves the privilege decision off the consent screen and onto identity policy. The blast radius moves with it.
+dek: The privilege decision leaves the consent screen and sits in identity policy. The blast radius sits there too.
 tags:
   - identity
   - mcp
@@ -15,20 +15,22 @@ sources:
 
 The MCP Enterprise-Managed Authorization extension is now stable. Anthropic, Microsoft, Okta, and a first wave of servers have adopted it. That is an architecture change, not a convenience feature.
 
-Until recently, most MCP access was a per-user, per-server OAuth consent. The privilege decision sat with the person in the chat. EMA moves it: the enterprise identity provider is the decision-maker. The client obtains an Identity Assertion JWT Authorization Grant (ID-JAG) from the IdP and exchanges it for an access token at the MCP server's authorization server. There is no per-server consent screen.
+Until recently, most MCP access was OAuth consent. Each user approved each server. The person in the chat decided what the connector could reach. Enterprise-managed auth, EMA, takes that decision away from the popup. The enterprise identity provider now makes it.
+
+During single sign-on, the client asks the IdP for an Identity Assertion JWT Authorization Grant. Call that the grant. The MCP server has its own authorization server. The client trades the grant there for an access token. There is no per-server consent screen.
 
 ```mermaid
 %% caption: The privilege decision sits at the IdP, not on a consent screen
 flowchart LR
   client[MCP client] --> idp[IdP policy]
-  idp --> jag[ID-JAG]
+  idp --> jag[Grant]
   jag --> server[MCP server]
 ```
 
-Three properties fall out of that. Admins authorize a server once and users inherit access by existing groups and roles. Revocation happens once at the IdP and applies everywhere. Removing the account picker makes it harder to spill data between a personal account and an enterprise one.
+Three things follow from that flow. An admin authorizes a server once. Users inherit that access through the groups and roles they already have. Revocation happens once at the IdP and applies everywhere. Removing the account picker makes it harder to mix a personal account with an enterprise one.
 
-The risk moves with the control. You are no longer reviewing a popup. You are reviewing an IdP allowlist, group mappings, and whether the MCP server's authorization server actually validates issuer, audience, expiry, subject, and tenant. A single over-broad IdP policy is now the blast radius.
+The decision has moved. So has the risk. You are no longer reviewing a popup. You are reviewing an IdP allowlist. You are reviewing group mappings. You need to know whether the MCP server's authorization server actually validates the token. Issuer, audience, expiry, subject, and tenant all have to be checked. One over-broad IdP policy is now the blast radius.
 
-Anthropic's own note is the one to keep: Claude relays what the IdP issued. Scope and data access are still the identity provider's policy and the connected service's permissions, not Anthropic's.
+Anthropic's own note is the one to keep. Claude relays what the IdP issued. Scope still comes from the identity provider's policy. Data access still comes from the connected service's permissions. Neither comes from Anthropic.
 
 If your MCP estate is still "everyone clicks Allow", you do not have a connector problem. You have an identity boundary you have not designed.
