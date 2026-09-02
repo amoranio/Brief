@@ -18,7 +18,7 @@ Checking each tool call against a list of allowed tools is not enough, because e
 
 ```mermaid
 %% caption: Two allowed tools combine into exfil; a gate that sees the pair can block it
-flowchart LR
+flowchart TD
   subgraph open [Per-tool allow]
     read1[Read] --> exfil[Exfil]
     mail1[Email] --> exfil

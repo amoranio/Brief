@@ -18,7 +18,7 @@ Harness Configuration is the highest-attack-success phase on every harness they 
 
 ```mermaid
 %% caption: Config is the hottest phase; detection that does not block still yields useful-but-unsafe
-flowchart LR
+flowchart TD
   cfg[Config] --> ext[Extension]
   ext --> run[Runtime]
   run --> state[Persistence]
