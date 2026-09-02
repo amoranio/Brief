@@ -1,5 +1,6 @@
 type Direction = 'LR' | 'RL' | 'TD' | 'TB' | 'BT';
 type Shape = 'rect' | 'round' | 'diamond';
+type Side = 'left' | 'right' | 'top' | 'bottom';
 
 interface NodeDef {
 	id: string;
@@ -12,6 +13,7 @@ interface EdgeDef {
 	from: string;
 	to: string;
 	label?: string;
+	dashed: boolean;
 }
 
 interface SubgraphDef {
@@ -20,11 +22,24 @@ interface SubgraphDef {
 	nodes: string[];
 }
 
-interface Box {
+export interface Box {
 	x: number;
 	y: number;
 	w: number;
 	h: number;
+}
+
+export interface Point {
+	x: number;
+	y: number;
+}
+
+export interface Segment {
+	x1: number;
+	y1: number;
+	x2: number;
+	y2: number;
+	dashed: boolean;
 }
 
 const STROKE = '#111111';
@@ -42,6 +57,9 @@ const CLUSTER_PAD = 18;
 const CLUSTER_TITLE = 20;
 const CLUSTER_GAP = 32;
 const PAGE_PAD = 8;
+const CLEARANCE = 6;
+const ROUTE_MARGIN = 18;
+const TURN_COST = 14;
 
 let diagramSerial = 0;
 
@@ -197,7 +215,8 @@ function parseMermaid(source: string): {
 			const right = parseToken(rightRaw);
 			ensureNode(nodes, right.id, right.deco, current?.id);
 			if (current && !current.nodes.includes(right.id)) current.nodes.push(right.id);
-			edges.push({ from: left.id, to: right.id, label: edgeLabel });
+			const op = chunks[i + 1];
+			edges.push({ from: left.id, to: right.id, label: edgeLabel, dashed: op === '-.->' });
 			chunks[i + 2] = rightRaw;
 		}
 	}
@@ -409,37 +428,342 @@ function layoutDiagram(
 	return { boxes: placed, clusters, width, height };
 }
 
-function anchor(box: Box, toward: Box): { x: number; y: number } {
-	const cx = box.x + box.w / 2;
-	const cy = box.y + box.h / 2;
-	const tx = toward.x + toward.w / 2;
-	const ty = toward.y + toward.h / 2;
-	const dx = tx - cx;
-	const dy = ty - cy;
-	if (Math.abs(dx) > Math.abs(dy)) {
-		return { x: dx > 0 ? box.x + box.w : box.x, y: cy };
-	}
-	return { x: cx, y: dy > 0 ? box.y + box.h : box.y };
+function titleBox(cluster: { box: Box }): Box {
+	return { x: cluster.box.x, y: cluster.box.y, w: cluster.box.w, h: CLUSTER_TITLE };
+}
+
+function inflate(box: Box, pad: number): Box {
+	return { x: box.x - pad, y: box.y - pad, w: box.w + pad * 2, h: box.h + pad * 2 };
+}
+
+export function segmentHitsBox(
+	x1: number,
+	y1: number,
+	x2: number,
+	y2: number,
+	box: Box,
+	inset = 0,
+): boolean {
+	const left = box.x + inset;
+	const top = box.y + inset;
+	const right = box.x + box.w - inset;
+	const bottom = box.y + box.h - inset;
+	if (right <= left || bottom <= top) return false;
+	const minX = Math.min(x1, x2);
+	const maxX = Math.max(x1, x2);
+	const minY = Math.min(y1, y2);
+	const maxY = Math.max(y1, y2);
+	return maxX > left && minX < right && maxY > top && minY < bottom;
+}
+
+function fmt(value: number): string {
+	return Number.isInteger(value) ? String(value) : value.toFixed(2).replace(/\.?0+$/, '');
 }
 
 function drawNode(node: NodeDef, box: Box): string {
 	const cx = box.x + box.w / 2;
 	const cy = box.y + box.h / 2;
-	const label = `<text x="${cx}" y="${cy + 1}" text-anchor="middle" dominant-baseline="middle" fill="${STROKE}" font-family="${FONT}" font-size="${FONT_SIZE}">${escapeXml(node.label)}</text>`;
+	const label = `<text x="${fmt(cx)}" y="${fmt(cy + 1)}" text-anchor="middle" dominant-baseline="middle" fill="${STROKE}" font-family="${FONT}" font-size="${FONT_SIZE}">${escapeXml(node.label)}</text>`;
 	if (node.shape === 'diamond') {
 		const points = [
-			`${cx},${box.y}`,
-			`${box.x + box.w},${cy}`,
-			`${cx},${box.y + box.h}`,
-			`${box.x},${cy}`,
+			`${fmt(cx)},${fmt(box.y)}`,
+			`${fmt(box.x + box.w)},${fmt(cy)}`,
+			`${fmt(cx)},${fmt(box.y + box.h)}`,
+			`${fmt(box.x)},${fmt(cy)}`,
 		].join(' ');
 		return `<polygon points="${points}" fill="none" stroke="${STROKE}" stroke-width="1.15"/>${label}`;
 	}
 	const radius = node.shape === 'round' ? 16 : 2;
-	return `<rect x="${box.x}" y="${box.y}" width="${box.w}" height="${box.h}" rx="${radius}" ry="${radius}" fill="none" stroke="${STROKE}" stroke-width="1.15"/>${label}`;
+	return `<rect x="${fmt(box.x)}" y="${fmt(box.y)}" width="${fmt(box.w)}" height="${fmt(box.h)}" rx="${radius}" ry="${radius}" fill="none" stroke="${STROKE}" stroke-width="1.15"/>${label}`;
 }
 
-export function renderMermaidSvg(source: string): string {
+function port(box: Box, side: Side): Point {
+	const cx = box.x + box.w / 2;
+	const cy = box.y + box.h / 2;
+	if (side === 'left') return { x: box.x, y: cy };
+	if (side === 'right') return { x: box.x + box.w, y: cy };
+	if (side === 'top') return { x: cx, y: box.y };
+	return { x: cx, y: box.y + box.h };
+}
+
+function outward(box: Box, side: Side, dist: number): Point {
+	const p = port(box, side);
+	if (side === 'left') return { x: p.x - dist, y: p.y };
+	if (side === 'right') return { x: p.x + dist, y: p.y };
+	if (side === 'top') return { x: p.x, y: p.y - dist };
+	return { x: p.x, y: p.y + dist };
+}
+
+function facingSide(from: Box, to: Box): Side {
+	const cx = from.x + from.w / 2;
+	const cy = from.y + from.h / 2;
+	const tx = to.x + to.w / 2;
+	const ty = to.y + to.h / 2;
+	const dx = tx - cx;
+	const dy = ty - cy;
+	if (Math.abs(dx) > Math.abs(dy)) return dx > 0 ? 'right' : 'left';
+	return dy > 0 ? 'bottom' : 'top';
+}
+
+function opposite(side: Side): Side {
+	if (side === 'left') return 'right';
+	if (side === 'right') return 'left';
+	if (side === 'top') return 'bottom';
+	return 'top';
+}
+
+function uniqueSorted(values: number[]): number[] {
+	const rounded = values.map((value) => Math.round(value * 100) / 100);
+	return [...new Set(rounded)].sort((a, b) => a - b);
+}
+
+function pointKey(point: Point): string {
+	return `${point.x},${point.y}`;
+}
+
+function collinear(a: Point, b: Point, c: Point): boolean {
+	return (a.x === b.x && b.x === c.x) || (a.y === b.y && b.y === c.y);
+}
+
+function simplifyPath(points: Point[]): Point[] {
+	const out: Point[] = [];
+	for (const point of points) {
+		const prev = out.at(-1);
+		if (prev && prev.x === point.x && prev.y === point.y) continue;
+		out.push(point);
+		while (out.length >= 3 && collinear(out[out.length - 3], out[out.length - 2], out[out.length - 1])) {
+			out.splice(out.length - 2, 1);
+		}
+	}
+	return out;
+}
+
+function pathLength(points: Point[]): number {
+	let length = 0;
+	for (let i = 1; i < points.length; i++) {
+		length += Math.abs(points[i].x - points[i - 1].x) + Math.abs(points[i].y - points[i - 1].y);
+	}
+	return length;
+}
+
+function blockedSegment(a: Point, b: Point, obstacles: Box[]): boolean {
+	if (a.x !== b.x && a.y !== b.y) return true;
+	for (const box of obstacles) {
+		if (segmentHitsBox(a.x, a.y, b.x, b.y, box)) return true;
+	}
+	return false;
+}
+
+function tryLPath(start: Point, end: Point, obstacles: Box[]): Point[] | null {
+	if (start.x === end.x || start.y === end.y) {
+		if (!blockedSegment(start, end, obstacles)) return [start, end];
+		return null;
+	}
+	const elbowA = { x: end.x, y: start.y };
+	if (!blockedSegment(start, elbowA, obstacles) && !blockedSegment(elbowA, end, obstacles)) {
+		return [start, elbowA, end];
+	}
+	const elbowB = { x: start.x, y: end.y };
+	if (!blockedSegment(start, elbowB, obstacles) && !blockedSegment(elbowB, end, obstacles)) {
+		return [start, elbowB, end];
+	}
+	return null;
+}
+
+function gridPath(start: Point, end: Point, obstacles: Box[], bounds: Box): Point[] | null {
+	const xs = uniqueSorted([
+		bounds.x,
+		bounds.x + bounds.w,
+		start.x,
+		end.x,
+		...obstacles.flatMap((box) => [box.x, box.x + box.w, box.x - 1, box.x + box.w + 1]),
+	]);
+	const ys = uniqueSorted([
+		bounds.y,
+		bounds.y + bounds.h,
+		start.y,
+		end.y,
+		...obstacles.flatMap((box) => [box.y, box.y + box.h, box.y - 1, box.y + box.h + 1]),
+	]);
+
+	const xIndex = new Map(xs.map((value, i) => [value, i]));
+	const yIndex = new Map(ys.map((value, i) => [value, i]));
+	if (!xIndex.has(start.x) || !yIndex.has(start.y) || !xIndex.has(end.x) || !yIndex.has(end.y)) {
+		return null;
+	}
+
+	const startState = `${xIndex.get(start.x)},${yIndex.get(start.y)},-1`;
+	const goal = `${xIndex.get(end.x)},${yIndex.get(end.y)}`;
+	const dist = new Map<string, number>();
+	const prev = new Map<string, { key: string; point: Point }>();
+	const heap: { key: string; i: number; j: number; dir: number; cost: number }[] = [];
+
+	dist.set(startState, 0);
+	heap.push({ key: startState, i: xIndex.get(start.x)!, j: yIndex.get(start.y)!, dir: -1, cost: 0 });
+
+	const pop = (): (typeof heap)[number] | undefined => {
+		if (heap.length === 0) return undefined;
+		let best = 0;
+		for (let i = 1; i < heap.length; i++) {
+			if (heap[i].cost < heap[best].cost) best = i;
+		}
+		return heap.splice(best, 1)[0];
+	};
+
+	const deltas = [
+		{ di: 1, dj: 0, dir: 0 },
+		{ di: -1, dj: 0, dir: 1 },
+		{ di: 0, dj: 1, dir: 2 },
+		{ di: 0, dj: -1, dir: 3 },
+	];
+
+	while (heap.length) {
+		const current = pop()!;
+		if (current.cost !== dist.get(current.key)) continue;
+		if (`${current.i},${current.j}` === goal) {
+			const points: Point[] = [{ x: xs[current.i], y: ys[current.j] }];
+			let cursor = current.key;
+			while (cursor !== startState) {
+				const step = prev.get(cursor);
+				if (!step) break;
+				points.push(step.point);
+				cursor = step.key;
+			}
+			points.reverse();
+			return points;
+		}
+
+		for (const delta of deltas) {
+			const ni = current.i + delta.di;
+			const nj = current.j + delta.dj;
+			if (ni < 0 || nj < 0 || ni >= xs.length || nj >= ys.length) continue;
+			const from = { x: xs[current.i], y: ys[current.j] };
+			const to = { x: xs[ni], y: ys[nj] };
+			if (blockedSegment(from, to, obstacles)) continue;
+			const step = Math.abs(to.x - from.x) + Math.abs(to.y - from.y);
+			const turn = current.dir !== -1 && current.dir !== delta.dir ? TURN_COST : 0;
+			const nextCost = current.cost + step + turn;
+			const nextKey = `${ni},${nj},${delta.dir}`;
+			const best = dist.get(nextKey);
+			if (best !== undefined && best <= nextCost) continue;
+			dist.set(nextKey, nextCost);
+			prev.set(nextKey, { key: current.key, point: from });
+			heap.push({ key: nextKey, i: ni, j: nj, dir: delta.dir, cost: nextCost });
+		}
+	}
+
+	return null;
+}
+
+function aroundBounds(start: Point, end: Point, bounds: Box): Point[] {
+	const top = [
+		start,
+		{ x: start.x, y: bounds.y },
+		{ x: end.x, y: bounds.y },
+		end,
+	];
+	const bottom = [
+		start,
+		{ x: start.x, y: bounds.y + bounds.h },
+		{ x: end.x, y: bounds.y + bounds.h },
+		end,
+	];
+	const left = [
+		start,
+		{ x: bounds.x, y: start.y },
+		{ x: bounds.x, y: end.y },
+		end,
+	];
+	const right = [
+		start,
+		{ x: bounds.x + bounds.w, y: start.y },
+		{ x: bounds.x + bounds.w, y: end.y },
+		end,
+	];
+	return [top, bottom, left, right].sort((a, b) => pathLength(a) - pathLength(b))[0];
+}
+
+const SIDES: Side[] = ['right', 'left', 'bottom', 'top'];
+
+function routeEdge(from: Box, to: Box, obstacles: Box[], bounds: Box): Point[] {
+	const inflated = obstacles.map((box) => inflate(box, CLEARANCE));
+	const preferred: [Side, Side][] = [
+		[facingSide(from, to), facingSide(to, from)],
+		[facingSide(from, to), opposite(facingSide(from, to))],
+		[opposite(facingSide(to, from)), facingSide(to, from)],
+	];
+	const pairs: [Side, Side][] = [];
+	const seen = new Set<string>();
+	for (const pair of [...preferred, ...SIDES.flatMap((a) => SIDES.map((b) => [a, b] as [Side, Side]))]) {
+		const key = `${pair[0]}-${pair[1]}`;
+		if (seen.has(key)) continue;
+		seen.add(key);
+		pairs.push(pair);
+	}
+
+	let best: Point[] | null = null;
+	let bestScore = Infinity;
+
+	for (let pairIndex = 0; pairIndex < pairs.length; pairIndex++) {
+		const [fromSide, toSide] = pairs[pairIndex];
+		const start = outward(from, fromSide, CLEARANCE);
+		const end = outward(to, toSide, CLEARANCE);
+		let mid = tryLPath(start, end, inflated);
+		if (!mid) mid = gridPath(start, end, inflated, bounds);
+		if (!mid) continue;
+		const path = simplifyPath([port(from, fromSide), ...mid, port(to, toSide)]);
+		const bends = Math.max(0, path.length - 2);
+		const score = bends * 1000 + pathLength(path) + pairIndex * 0.01;
+		if (score < bestScore) {
+			best = path;
+			bestScore = score;
+		}
+	}
+
+	if (best) return best;
+
+	const fromSide = facingSide(from, to);
+	const toSide = facingSide(to, from);
+	return simplifyPath([
+		port(from, fromSide),
+		...aroundBounds(outward(from, fromSide, CLEARANCE), outward(to, toSide, CLEARANCE), bounds),
+		port(to, toSide),
+	]);
+}
+
+function longestMidpoint(points: Point[]): { x: number; y: number; horizontal: boolean } {
+	let best = 0;
+	let from = points[0];
+	let to = points.at(-1) ?? points[0];
+	for (let i = 1; i < points.length; i++) {
+		const length = Math.abs(points[i].x - points[i - 1].x) + Math.abs(points[i].y - points[i - 1].y);
+		if (length > best) {
+			best = length;
+			from = points[i - 1];
+			to = points[i];
+		}
+	}
+	return {
+		x: (from.x + to.x) / 2,
+		y: (from.y + to.y) / 2,
+		horizontal: from.y === to.y,
+	};
+}
+
+export interface MermaidInspect {
+	caption: string;
+	nodeBoxes: Box[];
+	titleBoxes: Box[];
+	segments: Segment[];
+	svg: string;
+}
+
+function layoutAndRoute(source: string): {
+	parsed: ReturnType<typeof parseMermaid>;
+	laid: LaidOut;
+	titleBoxes: Box[];
+	routes: { edge: EdgeDef; points: Point[] }[];
+} {
 	const parsed = parseMermaid(source);
 	const horizontal = parsed.direction === 'LR' || parsed.direction === 'RL';
 	const laid = layoutDiagram(parsed, horizontal);
@@ -453,39 +777,96 @@ export function renderMermaidSvg(source: string): string {
 		for (const cluster of laid.clusters) cluster.box.y = laid.height - cluster.box.y - cluster.box.h;
 	}
 
+	const titleBoxes = laid.clusters.map(titleBox);
+	const bounds: Box = {
+		x: -ROUTE_MARGIN,
+		y: -ROUTE_MARGIN,
+		w: laid.width + ROUTE_MARGIN * 2,
+		h: laid.height + ROUTE_MARGIN * 2,
+	};
+	const routes: { edge: EdgeDef; points: Point[] }[] = [];
+	for (const edge of parsed.edges) {
+		const from = laid.boxes.get(edge.from);
+		const to = laid.boxes.get(edge.to);
+		if (!from || !to) continue;
+		const obstacles = [...laid.boxes.values(), ...titleBoxes];
+		routes.push({ edge, points: routeEdge(from, to, obstacles, bounds) });
+	}
+
+	return { parsed, laid, titleBoxes, routes };
+}
+
+export function inspectMermaidDiagram(source: string): MermaidInspect {
+	const { parsed, laid, titleBoxes, routes } = layoutAndRoute(source);
+
+	let minX = 0;
+	let minY = 0;
+	let maxX = laid.width;
+	let maxY = laid.height;
+	for (const cluster of laid.clusters) {
+		minX = Math.min(minX, cluster.box.x);
+		minY = Math.min(minY, cluster.box.y);
+		maxX = Math.max(maxX, cluster.box.x + cluster.box.w);
+		maxY = Math.max(maxY, cluster.box.y + cluster.box.h);
+	}
+	for (const box of laid.boxes.values()) {
+		minX = Math.min(minX, box.x);
+		minY = Math.min(minY, box.y);
+		maxX = Math.max(maxX, box.x + box.w);
+		maxY = Math.max(maxY, box.y + box.h);
+	}
+	for (const route of routes) {
+		for (const point of route.points) {
+			minX = Math.min(minX, point.x);
+			minY = Math.min(minY, point.y);
+			maxX = Math.max(maxX, point.x);
+			maxY = Math.max(maxY, point.y);
+		}
+	}
+
+	const ox = PAGE_PAD - minX;
+	const oy = PAGE_PAD - minY;
+	const width = maxX - minX + PAGE_PAD * 2;
+	const height = maxY - minY + PAGE_PAD * 2;
 	const id = `m${++diagramSerial}`;
-	const width = laid.width + PAGE_PAD * 2;
-	const height = laid.height + PAGE_PAD * 2;
-	const ox = PAGE_PAD;
-	const oy = PAGE_PAD;
 
 	const parts: string[] = [
-		`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}" role="img" aria-label="${escapeXml(parsed.caption)}">`,
+		`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${fmt(width)} ${fmt(height)}" width="${fmt(width)}" height="${fmt(height)}" role="img" aria-label="${escapeXml(parsed.caption)}">`,
 		`<defs><marker id="${id}-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 1.2 L 10 5 L 0 8.8 z" fill="${STROKE}"/></marker></defs>`,
 	];
 
 	for (const cluster of laid.clusters) {
 		const box = cluster.box;
 		parts.push(
-			`<rect x="${box.x + ox}" y="${box.y + oy}" width="${box.w}" height="${box.h}" fill="none" stroke="${RULE}" stroke-width="1"/>`,
-			`<text x="${box.x + ox + CLUSTER_PAD}" y="${box.y + oy + 14}" fill="${MUTED}" font-family="${FONT}" font-size="11">${escapeXml(cluster.title)}</text>`,
+			`<rect x="${fmt(box.x + ox)}" y="${fmt(box.y + oy)}" width="${fmt(box.w)}" height="${fmt(box.h)}" fill="none" stroke="${RULE}" stroke-width="1"/>`,
+			`<text x="${fmt(box.x + ox + CLUSTER_PAD)}" y="${fmt(box.y + oy + 14)}" fill="${MUTED}" font-family="${FONT}" font-size="11">${escapeXml(cluster.title)}</text>`,
 		);
 	}
 
-	for (const edge of parsed.edges) {
-		const from = laid.boxes.get(edge.from);
-		const to = laid.boxes.get(edge.to);
-		if (!from || !to) continue;
-		const a = anchor(from, to);
-		const b = anchor(to, from);
+	const segments: Segment[] = [];
+	for (const route of routes) {
+		const points = route.points.map((point) => ({ x: point.x + ox, y: point.y + oy }));
+		for (let i = 1; i < points.length; i++) {
+			segments.push({
+				x1: points[i - 1].x,
+				y1: points[i - 1].y,
+				x2: points[i].x,
+				y2: points[i].y,
+				dashed: route.edge.dashed,
+			});
+		}
+		const pointAttr = points.map((point) => `${fmt(point.x)},${fmt(point.y)}`).join(' ');
+		const dash = route.edge.dashed ? ' stroke-dasharray="5 4"' : '';
 		parts.push(
-			`<line x1="${a.x + ox}" y1="${a.y + oy}" x2="${b.x + ox}" y2="${b.y + oy}" stroke="${STROKE}" stroke-width="1.05" marker-end="url(#${id}-arrow)"/>`,
+			`<polyline points="${pointAttr}" fill="none" stroke="${STROKE}" stroke-width="1.05"${dash} marker-end="url(#${id}-arrow)"/>`,
 		);
-		if (edge.label) {
-			const mx = (a.x + b.x) / 2 + ox;
-			const my = (a.y + b.y) / 2 + oy - 7;
+		if (route.edge.label) {
+			const mid = longestMidpoint(points);
+			const x = mid.horizontal ? mid.x : mid.x + 8;
+			const y = mid.horizontal ? mid.y - 7 : mid.y;
+			const anchor = mid.horizontal ? 'middle' : 'start';
 			parts.push(
-				`<text x="${mx}" y="${my}" text-anchor="middle" fill="${MUTED}" font-family="${FONT}" font-size="11">${escapeXml(edge.label)}</text>`,
+				`<text x="${fmt(x)}" y="${fmt(y)}" text-anchor="${anchor}" fill="${MUTED}" font-family="${FONT}" font-size="11">${escapeXml(route.edge.label)}</text>`,
 			);
 		}
 	}
@@ -497,5 +878,16 @@ export function renderMermaidSvg(source: string): string {
 	}
 
 	parts.push('</svg>');
-	return `<figure class="diagram">${parts.join('')}</figure>`;
+
+	return {
+		caption: parsed.caption,
+		nodeBoxes: [...laid.boxes.values()].map((box) => ({ ...box, x: box.x + ox, y: box.y + oy })),
+		titleBoxes: titleBoxes.map((box) => ({ ...box, x: box.x + ox, y: box.y + oy })),
+		segments,
+		svg: parts.join(''),
+	};
+}
+
+export function renderMermaidSvg(source: string): string {
+	return `<figure class="diagram">${inspectMermaidDiagram(source).svg}</figure>`;
 }

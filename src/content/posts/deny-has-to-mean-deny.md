@@ -17,7 +17,7 @@ A support agent could look up accounts and issue refunds, and refunds over a thr
 
 ```mermaid
 %% caption: Guard on the interactive path, missed on the batch path
-flowchart LR
+flowchart TD
   subgraph interactive [Interactive]
     call1[Tool call] --> guard[Guard]
     guard --> refund1[Refund]
@@ -37,11 +37,11 @@ A host that cannot reach an interceptor must stop the action itself, and so must
 
 ```mermaid
 %% caption: Three verdicts, and a crash still stops the action
-flowchart LR
+flowchart TD
   action[Action] --> hook[Interceptor]
   hook -->|allow| run[Execute]
-  hook -->|deny| stop[Stop]
   hook -->|transform| rewrite[Rewrite]
+  hook -->|deny| stop[Stop]
   crash[Crash or miss] --> stop
 ```
 

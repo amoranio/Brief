@@ -19,7 +19,7 @@ The contract does not sit on every path: background work can skip `pre_tool_call
 
 ```mermaid
 %% caption: Contract inside a trusted host; a skipped path never hits it
-flowchart LR
+flowchart TD
   subgraph host [Trusted host]
     loop[Agent loop] --> hook[Contract]
     hook --> tool1[Tool]

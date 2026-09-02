@@ -22,7 +22,7 @@ So a description filter is not a call gate. If the name is enough to fire the to
 
 ```mermaid
 %% caption: Same origin, two registrants; the inspector has no tools; a task-fitting name can skip the inspect
-flowchart LR
+flowchart TD
   subgraph origin [Same origin]
     site[Site script]
     ad[Ad SDK]
