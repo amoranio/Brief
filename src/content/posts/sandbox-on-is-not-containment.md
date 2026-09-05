@@ -37,4 +37,4 @@ The enterprise residual is not only “escape the box.” It is operators who tr
 - Deny hostNetwork, Docker socket mounts, and privileged containers on agent runtimes.
 - Assume self-hosted agents inherit the host’s VPN, internal APIs, and cloud credentials — scope the host accordingly.
 - Block unsandboxed tools from consuming agent-written config or hooks.
-- Re-test isolation with a breakout bench (for example SandboxEscapeBench classes) after every harness or host change.
+- Re-test isolation after every harness or host change (SandboxEscapeBench-class cases: Docker socket, privileged containers).
