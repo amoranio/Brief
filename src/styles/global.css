@@ -159,7 +159,7 @@ a {
 	margin-right: auto;
 	font-size: clamp(1.2rem, 1.05rem + 0.6vw, 1.4rem);
 	font-weight: 500;
-	letter-spacing: -0.055em;
+	letter-spacing: -0.03em;
 	line-height: 1;
 	text-decoration: none;
 	color: var(--fg);
@@ -403,10 +403,9 @@ h2 {
 
 .archive-title {
 	font-size: var(--text-title);
-	font-weight: 540;
-	letter-spacing: -0.03em;
+	font-weight: 450;
+	letter-spacing: -0.022em;
 	line-height: var(--lh-title);
-	transition: opacity 0.15s ease;
 }
 
 .section-head {
@@ -423,7 +422,7 @@ h2 {
 
 .section-head h2 {
 	font-size: var(--text-meta);
-	font-weight: 550;
+	font-weight: 500;
 	letter-spacing: 0.1em;
 	text-transform: uppercase;
 	color: var(--muted);
@@ -587,7 +586,7 @@ h2 {
 
 .sources h2 {
 	font-size: var(--text-meta);
-	font-weight: 550;
+	font-weight: 500;
 	letter-spacing: 0.1em;
 	text-transform: uppercase;
 	color: var(--muted);
