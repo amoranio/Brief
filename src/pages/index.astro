@@ -1,25 +1,12 @@
 ---
 import Base from '../layouts/Base.astro';
-import { getPosts, isoDate } from '../lib/collection';
-import { formatDate } from '../lib/dates';
+import Feed from '../components/Feed.astro';
+import { asTaggedPost, getPosts } from '../lib/collection';
 
 const posts = await getPosts();
 ---
 
 <Base title="Brief" description="A short publication on AI security architecture and risk.">
-	<ol class="posts">
-		{
-			posts.map((post) => (
-				<li>
-					<a href={`/${post.id}/`}>
-						<div class="date">
-							<time datetime={isoDate(post.data.date)}>{formatDate(post.data.date)}</time>
-						</div>
-						<h2>{post.data.title}</h2>
-						<p class="dek">{post.data.dek}</p>
-					</a>
-				</li>
-			))
-		}
-	</ol>
+	<h1 class="visually-hidden">Brief</h1>
+	<Feed entries={posts.map(asTaggedPost)} />
 </Base>

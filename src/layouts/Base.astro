@@ -1,8 +1,6 @@
 ---
 import '../styles/global.css';
-import Rail from '../components/Rail.astro';
-import Wordmark from '../components/Wordmark.astro';
-import { allTags, getPosts } from '../lib/collection';
+import ThemeToggle from '../components/ThemeToggle.astro';
 
 interface Props {
 	title: string;
@@ -11,9 +9,11 @@ interface Props {
 
 const { title, description } = Astro.props;
 const canonical = new URL(Astro.url.pathname, Astro.site);
-const posts = await getPosts();
-const tags = allTags(posts);
 const path = Astro.url.pathname.endsWith('/') ? Astro.url.pathname : `${Astro.url.pathname}/`;
+
+function current(href: string, prefix = false): boolean {
+	return path === href || (prefix && path.startsWith(href));
+}
 ---
 
 <!doctype html>
@@ -21,34 +21,89 @@ const path = Astro.url.pathname.endsWith('/') ? Astro.url.pathname : `${Astro.ur
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="color-scheme" content="light dark" />
 		<title>{title}</title>
 		<meta name="description" content={description} />
 		<link rel="canonical" href={canonical} />
 		<link rel="alternate" type="application/rss+xml" title="Brief" href={new URL('rss.xml', Astro.site)} />
+		<script is:inline>
+			(function () {
+				try {
+					var theme = localStorage.getItem('brief-theme');
+					if (theme === 'light' || theme === 'dark') {
+						document.documentElement.setAttribute('data-theme', theme);
+						document.documentElement.style.colorScheme = theme;
+					}
+				} catch (e) {}
+			})();
+		</script>
 	</head>
 	<body>
-		<input type="checkbox" id="rail-collapse" class="rail-collapse" />
+		<a class="skip" href="#main">Skip to content</a>
 		<div class="page">
 			<header class="masthead">
-				<a class="wordmark" href="/" aria-label="brief" aria-current={path === '/' ? 'page' : undefined}>
-					<Wordmark />
-				</a>
-				<nav>
-					<a href="/about/" aria-current={path === '/about/' ? 'page' : undefined}>About</a>
+				<a class="wordmark" href="/" aria-current={current('/') ? 'page' : undefined}>brief</a>
+				<nav id="site-nav" class="site-nav" aria-label="Site">
+					<a href="/patterns/" aria-current={current('/patterns/', true) ? 'page' : undefined}>
+						patterns
+					</a>
+					<a href="/archive/" aria-current={current('/archive/') ? 'page' : undefined}>archive</a>
+					<a href="/tags/" aria-current={current('/tags/', true) ? 'page' : undefined}>tags</a>
+					<a href="/about/" aria-current={current('/about/') ? 'page' : undefined}>about</a>
+					<a href="/rss.xml">rss</a>
 				</nav>
+				<div class="masthead-tools">
+					<button
+						type="button"
+						class="menu-toggle"
+						data-menu-toggle
+						aria-expanded="false"
+						aria-controls="site-nav"
+					>
+						<span class="visually-hidden">Menu</span>
+						<span class="menu-bars" aria-hidden="true">
+							<span class="menu-bar"></span>
+							<span class="menu-bar"></span>
+							<span class="menu-bar"></span>
+						</span>
+					</button>
+					<ThemeToggle />
+				</div>
 			</header>
-			<Rail posts={posts} tags={tags} pathname={Astro.url.pathname} />
-			<div class="shell">
-				<main>
-					<slot />
-				</main>
-				<footer class="colophon">
-					© Ashley Moran · <a href="https://amoran.io">amoran.io</a>
-				</footer>
-			</div>
+			<main id="main">
+				<slot />
+			</main>
+			<footer class="colophon">
+				<span>© Ashley Moran</span>
+				<a href="https://amoran.io">amoran.io</a>
+				<a href="/rss.xml">RSS</a>
+			</footer>
 		</div>
-		<a class="rail-edge" href="#index">Index</a>
-		<label class="rail-tab" for="rail-collapse">Index</label>
-		<a class="rail-scrim" href="#" aria-hidden="true"></a>
+		<script>
+			const toggle = document.querySelector<HTMLButtonElement>('[data-menu-toggle]');
+			const nav = document.getElementById('site-nav');
+
+			function setOpen(open: boolean) {
+				if (!toggle) return;
+				toggle.setAttribute('aria-expanded', String(open));
+				document.body.classList.toggle('menu-open', open);
+			}
+
+			toggle?.addEventListener('click', () => {
+				setOpen(toggle.getAttribute('aria-expanded') !== 'true');
+			});
+
+			nav?.querySelectorAll('a').forEach((link) => {
+				link.addEventListener('click', () => setOpen(false));
+			});
+
+			document.addEventListener('keydown', (event) => {
+				if (event.key === 'Escape') setOpen(false);
+			});
+
+			window.addEventListener('resize', () => {
+				if (window.innerWidth >= 640) setOpen(false);
+			});
+		</script>
 	</body>
 </html>
