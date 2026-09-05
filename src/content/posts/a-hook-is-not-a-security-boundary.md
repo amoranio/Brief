@@ -31,3 +31,11 @@ flowchart TD
 A conformance suite can test a host that cooperates, but it cannot catch a host that skips the hook. A sandbox is a different control, built to contain code you do not trust. Mixing the two is how you get a false boundary: the report is green on the paths that asked, while the incident is on the path that did not.
 
 Put the contract on the runtime that will ask it, and put isolation (process, identity, or network) around anything you do not trust. The hook proves that the action stopped; the sandbox is what stops the host that never asks.
+
+## Recommendations
+
+- Put Agent Hooks only on a host that will actually ask the contract.
+- Isolate untrusted code in a sandbox; do not treat a hook as containment.
+- Inventory paths that skip `pre_tool_call`, including background work and hosted tools.
+- Treat a green conformance report as coverage of cooperative paths only.
+- Pair the contract with process, identity, or network isolation around anything you do not trust.

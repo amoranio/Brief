@@ -20,6 +20,14 @@ The second layer is an asymmetric pair of agents. A quarantine model reads tool 
 
 So a description filter is not a call gate. If the name is enough to fire the tool, the inspect happens after the action. The remaining control is a call-timing gate that delays invocation until every agent-visible field, including the name, has been validated. Treat the origin as a DNS boundary, because that is all the Same-Origin Policy ever was. Put ownership in the browser as an unforgeable capability, and put inspection on a principal that cannot call tools. Then add the gate, so a task-fitting name cannot skip the queue.
 
+## Recommendations
+
+- Put tool ownership in the browser as an unforgeable capability, not in page JavaScript.
+- Keep the inspector on a principal that cannot invoke tools.
+- Delay invocation until every agent-visible field, including the name, has been validated.
+- Treat the page origin as a DNS boundary, not as a registrant or script identity.
+- Do not let a task-fitting tool name skip the inspect queue.
+
 ```mermaid
 %% caption: Same origin, two registrants; the inspector has no tools; a task-fitting name can skip the inspect
 flowchart TD

@@ -30,3 +30,11 @@ flowchart LR
 Shield is the paper’s proposed monitor. This is not a product review. Shield sits on the MCP connection and runs before the host trusts the payload: during the clean window it learns what replies look like, and later it compares new payloads to that baseline. The paper measured high success for TrustShift across frontier models, and a transport monitor reduced that attack’s success rate; those figures are the paper’s measurement, not Brief’s claim.
 
 TrustShiftProbe is the evaluation framework used by Rostamzadeh, Narula, Ghasemigol, and Takabi in work submitted to IEEE. The control you do not have yet is a runtime baseline. Trust at the first interaction is not trust after N of them.
+
+## Recommendations
+
+- Do not treat an admission-time scan as a runtime trust decision.
+- Put a monitor on the MCP transport that compares later payloads to a clean-window baseline.
+- Re-verify tools after the executable or package changes, even if the name is unchanged.
+- Assume a schema-valid reply can still be a defection after the trust horizon.
+- Time-bound trust: re-attest after N interactions, not once at install.

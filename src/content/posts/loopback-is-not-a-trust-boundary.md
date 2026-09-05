@@ -32,3 +32,11 @@ flowchart TD
 OpenShell still limits the host filesystem, network, and process, but the blast radius is not that wall: it is the agent’s authorized tools and the organization’s resources those tools can already reach. `0.0.0.0` also exposes the API on the LAN, where no rebinding is required.
 
 CVE-2026-65105 is the identifier; Oasis Security found it in NemoClaw, and Cyera published on 25 August 2026. Do not treat loopback as a property of the log line. Treat it as a property of the bind.
+
+## Recommendations
+
+- Treat loopback as a property of the bind, not of a log line that says localhost.
+- Do not bind an unauthenticated model API to `0.0.0.0`.
+- Disable or authenticate `/api/create` template fields on local inference servers.
+- Assume a sandboxed agent that follows a poisoned model can still spend its authorized tools.
+- Recheck Host and CORS behavior after any bind-address change.

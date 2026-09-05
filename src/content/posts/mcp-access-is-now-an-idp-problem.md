@@ -34,3 +34,11 @@ The decision has moved, and so has the risk. You are no longer reviewing a popup
 Anthropic’s own note is the one to keep: Claude relays what the IdP issued. Scope still comes from the identity provider’s policy, and data access still comes from the connected service’s permissions. Neither comes from Anthropic.
 
 If your MCP estate is still “everyone clicks Allow”, you do not have a connector problem. You have an identity boundary you have not designed.
+
+## Recommendations
+
+- Review the IdP allowlist and group mappings as the MCP privilege boundary.
+- Confirm each MCP authorization server validates issuer, audience, expiry, subject, and tenant.
+- Revoke at the IdP, then verify the grant is dead on every connected server.
+- Do not treat a removed consent screen as a reduced blast radius.
+- If users still click Allow, design the identity boundary before adding more connectors.

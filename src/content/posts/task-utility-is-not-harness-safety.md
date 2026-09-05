@@ -29,3 +29,11 @@ flowchart TD
 ```
 
 Score the deployed model–harness configuration. Harden config-time parameters and persistence provenance, and require recovery that actually remediates. Do not treat a model leaderboard or a high detection rate as containment.
+
+## Recommendations
+
+- Score the deployed model–harness configuration, not the model alone.
+- Harden config-time parameters; that phase is where attack success peaked.
+- Require a blocking control, not detection, before the action runs.
+- Protect persistence provenance so a useful-but-unsafe run cannot rewrite state.
+- Demand recovery that remediates, not a log line next to a successful attack.
