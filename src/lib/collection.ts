@@ -2,13 +2,20 @@ import { getCollection } from 'astro:content';
 import type { CollectionEntry } from 'astro:content';
 
 export type Post = CollectionEntry<'posts'>;
+export type Pattern = CollectionEntry<'patterns'>;
+
+function byDateThenTitle<T extends { data: { date: Date; title: string } }>(a: T, b: T): number {
+	const byDate = b.data.date.valueOf() - a.data.date.valueOf();
+	if (byDate !== 0) return byDate;
+	return a.data.title.localeCompare(b.data.title);
+}
 
 export async function getPosts(): Promise<Post[]> {
-	return (await getCollection('posts')).sort((a, b) => {
-		const byDate = b.data.date.valueOf() - a.data.date.valueOf();
-		if (byDate !== 0) return byDate;
-		return a.data.title.localeCompare(b.data.title);
-	});
+	return (await getCollection('posts')).sort(byDateThenTitle);
+}
+
+export async function getPatterns(): Promise<Pattern[]> {
+	return (await getCollection('patterns')).sort(byDateThenTitle);
 }
 
 export function allTags(posts: Post[]): string[] {

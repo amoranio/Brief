@@ -1,0 +1,26 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getPatterns, isoDate } from '../../lib/collection';
+import { formatDate } from '../../lib/dates';
+
+const patterns = await getPatterns();
+---
+
+<Base title="Patterns · Brief" description="Architecture patterns from Brief.">
+	<h1>Patterns</h1>
+	<ol class="posts">
+		{
+			patterns.map((pattern) => (
+				<li>
+					<a href={`/patterns/${pattern.id}/`}>
+						<div class="date">
+							<time datetime={isoDate(pattern.data.date)}>{formatDate(pattern.data.date)}</time>
+						</div>
+						<h2>{pattern.data.title}</h2>
+						<p class="dek">{pattern.data.dek}</p>
+					</a>
+				</li>
+			))
+		}
+	</ol>
+</Base>

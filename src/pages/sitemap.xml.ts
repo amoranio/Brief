@@ -1,17 +1,23 @@
 import type { APIContext } from 'astro';
-import { allTags, getPosts, isoDate } from '../lib/collection';
+import { allTags, getPatterns, getPosts, isoDate } from '../lib/collection';
 
 export async function GET(context: APIContext) {
 	const site = context.site!;
 	const posts = await getPosts();
+	const patterns = await getPatterns();
 	const tags = allTags(posts);
 
 	const urls: { path: string; lastmod?: string }[] = [
 		{ path: '' },
 		{ path: 'about/' },
+		{ path: 'patterns/' },
 		...posts.map((post) => ({
 			path: `${post.id}/`,
 			lastmod: isoDate(post.data.date),
+		})),
+		...patterns.map((pattern) => ({
+			path: `patterns/${pattern.id}/`,
+			lastmod: isoDate(pattern.data.date),
 		})),
 		...tags.map((tag) => ({ path: `tags/${tag}/` })),
 	];

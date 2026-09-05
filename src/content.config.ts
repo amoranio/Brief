@@ -17,4 +17,15 @@ const posts = defineCollection({
 	}),
 });
 
-export const collections = { posts };
+const patterns = defineCollection({
+	loader: glob({ base: './src/content/patterns', pattern: '**/*.md' }),
+	schema: z.object({
+		title: z.string(),
+		date: z.coerce.date(),
+		dek: z.string(),
+		relatedPost: z.string().min(1).optional(),
+		sources: z.array(z.string().url()).default([]),
+	}),
+});
+
+export const collections = { posts, patterns };
