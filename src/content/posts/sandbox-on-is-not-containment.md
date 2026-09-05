@@ -25,7 +25,16 @@ flowchart TD
   label --> host[Host process]
   host --> vpn[VPN and internal APIs]
   host --> cloud[Cloud credentials]
-  misconfig[Docker socket or privileged] -.->|escape path| host
+  misconfig[Docker socket or privileged]
+  misconfig -.->|escape path| host
 ```
 
 The enterprise residual is not only “escape the box.” It is operators who treat sandbox-on as containment while the agent already sits on the paths an actor would buy or phish for. Verify no hostNetwork, no Docker socket, no unsandboxed consumers of agent-written config, and no silent inheritance of VPN and cloud identity. Treat “sandbox on” as a claim to check, not a green light.
+
+## Recommendations
+
+- Treat “sandbox on” as a claim to verify, not a containment guarantee.
+- Deny hostNetwork, Docker socket mounts, and privileged containers on agent runtimes.
+- Assume self-hosted agents inherit the host’s VPN, internal APIs, and cloud credentials — scope the host accordingly.
+- Block unsandboxed tools from consuming agent-written config or hooks.
+- Re-test isolation with a breakout bench (for example SandboxEscapeBench classes) after every harness or host change.
