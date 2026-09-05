@@ -1,6 +1,6 @@
 ---
 title: Sandbox on is not containment
-date: 2026-09-07
+date: 2026-09-05
 dek: A sandbox label does not mean the agent is cut off from the estate. If the host can reach the VPN and the cloud APIs, so can the agent.
 tags:
   - agents
@@ -12,7 +12,7 @@ sources:
   - https://www.aisi.gov.uk/blog/can-ai-agents-escape-their-sandboxes-a-benchmark-for-safely-measuring-container-breakout-capabilities
 ---
 
-Operators often read “sandbox on” as containment. That is a comfort label, not a verified boundary. A sandbox can still hold while the agent inherits the host’s network, VPN paths, and cloud credentials, or while a misconfigured container gives the model a reliable way out.
+Operators often read “sandbox on” as containment. That is a comfort label, not a verified boundary. A sandbox can still be “on” while the agent inherits the host’s network, VPN paths, and cloud credentials. A misconfigured container can still hand the model an escape path.
 
 Warp’s self-hosting security docs state the inheritance plainly. For unmanaged runs, agents inherit the host’s network access, tools, and credentials: if the host can reach a VPN or an internal service, the agent can too. The same page lists that reach as a reason teams choose self-hosting, and it asks operators to evaluate accordingly. That is not a vendor failure. It is an architecture fact: the “sandbox” in that deployment is a workspace and a process shape, not a denial of the estate’s lateral paths.
 
