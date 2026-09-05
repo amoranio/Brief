@@ -16,7 +16,7 @@ Operators often read “sandbox on” as containment. That is a comfort label, n
 
 Warp’s self-hosting security docs state the inheritance plainly. For unmanaged runs, agents inherit the host’s network access, tools, and credentials: if the host can reach a VPN or an internal service, the agent can too. Warp cites that inheritance as a reason teams choose self-hosting, and tells operators to weigh the risk. That is not a vendor failure. It is an architecture fact: the “sandbox” in that deployment is a workspace and a process shape, not a denial of the estate’s lateral paths.
 
-The UK AI Security Institute’s SandboxEscapeBench makes the complementary point from the other side of the wall. Their AISI Work write-up (25 August 2026) reports that frontier models can reliably escape common real-world misconfigurations when prompted to do so, including exposed Docker sockets and privileged containers. Those setups show up in developer tooling, ad-hoc evaluation harnesses, and fast agent prototypes. The box never had to be novel. The trust boundary was never real.
+The UK AI Security Institute’s SandboxEscapeBench makes the complementary point. Their AISI Work write-up (25 August 2026) reports that frontier models can reliably escape common real-world misconfigurations when prompted to do so, including exposed Docker sockets and privileged containers. Those setups show up in developer tooling, ad-hoc evaluation harnesses, and fast agent prototypes. The box never had to be novel. The trust boundary was never real.
 
 ```mermaid
 %% caption: Sandbox label on the agent; host network and VPN still open underneath
