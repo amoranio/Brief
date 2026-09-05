@@ -264,6 +264,7 @@ h1 {
 
 .rail a[aria-current='page'] {
 	color: var(--fg);
+	font-weight: 600;
 }
 
 .rail-head {
@@ -319,11 +320,15 @@ h1 {
 
 .rail-posts a:hover,
 .rail-tags a:hover,
-.rail-site a:hover,
+.rail-site a:hover {
+	border-left-color: var(--rule);
+}
+
 .rail-posts a[aria-current='page'],
 .rail-tags a[aria-current='page'],
 .rail-site a[aria-current='page'] {
 	border-left-color: var(--fg);
+	border-left-width: 2px;
 }
 
 .rail-posts li + li {
