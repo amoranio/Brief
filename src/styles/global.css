@@ -557,41 +557,54 @@ h2 {
 }
 
 /*
- * Recolor baked diagram ink instead of filter: invert().
- * Invert rasterizes 1.05px dashed polylines and washes the 5/4 dash pattern.
+ * Dark diagrams: recolor baked ink. Do not use filter: invert() —
+ * it rasterizes 1.05px dashed polylines (Sandbox escape path,
+ * outbound-token missing gate) and washes the 5/4 pattern.
  */
 @media (prefers-color-scheme: dark) {
-	:root:not([data-theme='light']) .diagram svg [stroke='#111111'] {
-		stroke: #f0f0fa;
-	}
-
-	:root:not([data-theme='light']) .diagram svg [fill='#111111'] {
-		fill: #f0f0fa;
-	}
-
-	:root:not([data-theme='light']) .diagram svg [fill='#5c5c5c'] {
-		fill: rgba(240, 240, 250, 0.55);
-	}
-
-	:root:not([data-theme='light']) .diagram svg [stroke='#d6d4cf'] {
-		stroke: rgba(240, 240, 250, 0.12);
+	:root:not([data-theme='light']) {
+		--diagram-ink: #f0f0fa;
+		--diagram-muted: rgba(240, 240, 250, 0.55);
+		--diagram-rule: rgba(240, 240, 250, 0.12);
 	}
 }
 
-:root[data-theme='dark'] .diagram svg [stroke='#111111'] {
-	stroke: #f0f0fa;
+:root[data-theme='dark'] {
+	--diagram-ink: #f0f0fa;
+	--diagram-muted: rgba(240, 240, 250, 0.55);
+	--diagram-rule: rgba(240, 240, 250, 0.12);
 }
 
-:root[data-theme='dark'] .diagram svg [fill='#111111'] {
-	fill: #f0f0fa;
+.diagram svg [stroke='#111111'] {
+	stroke: var(--diagram-ink, #111111);
 }
 
-:root[data-theme='dark'] .diagram svg [fill='#5c5c5c'] {
-	fill: rgba(240, 240, 250, 0.55);
+.diagram svg [fill='#111111'] {
+	fill: var(--diagram-ink, #111111);
 }
 
-:root[data-theme='dark'] .diagram svg [stroke='#d6d4cf'] {
-	stroke: rgba(240, 240, 250, 0.12);
+.diagram svg [fill='#5c5c5c'] {
+	fill: var(--diagram-muted, #5c5c5c);
+}
+
+.diagram svg [stroke='#d6d4cf'] {
+	stroke: var(--diagram-rule, #d6d4cf);
+}
+
+.diagram svg [stroke-dasharray] {
+	shape-rendering: geometricPrecision;
+	stroke-linecap: butt;
+	stroke-linejoin: miter;
+}
+
+@media (prefers-color-scheme: dark) {
+	:root:not([data-theme='light']) .diagram svg [stroke-dasharray] {
+		stroke-width: 1.35px;
+	}
+}
+
+:root[data-theme='dark'] .diagram svg [stroke-dasharray] {
+	stroke-width: 1.35px;
 }
 
 .sources {
