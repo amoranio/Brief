@@ -156,13 +156,31 @@ a {
 }
 
 .wordmark {
+	display: inline-flex;
+	align-items: baseline;
+	gap: 0.26em;
 	margin-right: auto;
 	font-size: clamp(1.2rem, 1.05rem + 0.6vw, 1.4rem);
-	font-weight: 500;
+	font-weight: 600;
 	letter-spacing: -0.03em;
 	line-height: 1;
 	text-decoration: none;
-	color: var(--fg);
+	color: inherit;
+}
+
+.wordmark-rule {
+	display: block;
+	width: 0.5em;
+	height: 0.11em;
+	/* Sit on the x-height midline of Geist lowercase, not the cap box. */
+	margin-bottom: 0.208em;
+	border-radius: 999px;
+	background-color: currentColor;
+	flex-shrink: 0;
+}
+
+.wordmark-text {
+	color: inherit;
 }
 
 .wordmark:hover {
