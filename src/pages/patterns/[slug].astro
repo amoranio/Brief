@@ -33,6 +33,7 @@ const relatedTitle = relatedPost?.data.title ?? relatedSlug;
 			<time datetime={isoDate(pattern.data.date)}>{formatDate(pattern.data.date)}</time>
 		</div>
 		<h1>{pattern.data.title}</h1>
+		<p class="dek">{pattern.data.dek}</p>
 		<div class="body">
 			<Content />
 			{
