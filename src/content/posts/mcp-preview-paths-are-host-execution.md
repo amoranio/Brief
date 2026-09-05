@@ -32,3 +32,11 @@ flowchart TD
 ```
 
 A preview or connection-test surface that can spawn stdio is not a sandbox. It is a host-execution path sitting on the same process that already holds the estate’s model credentials. Role-gate it like any other admin action, keep management interfaces off the public internet, and treat the AI gateway as Tier-0 infrastructure. Do not leave “test” in the name as if that made the residual optional.
+
+## Recommendations
+
+- Role-gate every MCP preview or connection-test endpoint the same way as the save path.
+- Do not let a preview surface spawn stdio on a host that holds provider keys.
+- Keep gateway management interfaces off the public internet.
+- Treat the AI gateway process as Tier-0 infrastructure and monitor it as such.
+- After patching, re-check that test endpoints reject non-admin keys and unauthenticated Host-header tricks.

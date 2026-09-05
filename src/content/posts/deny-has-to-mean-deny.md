@@ -50,3 +50,11 @@ An approval is bound to a hash of what the human saw: the bytes hashed are the c
 Replay the approval against a mutated $8,400 refund and it fails, because the content is different. The deny stands.
 
 This is a cooperative contract, not a sandbox, so a hostile host can skip points and a direct tool path may never hit `pre_tool_call`. Containing untrusted code is a sandbox’s job; the contract’s job is to make deny mean deny, and that only covers the paths a cooperating host actually runs.
+
+## Recommendations
+
+- Bind every deny, approval, and transform to the action that actually runs, including batch paths.
+- Fail closed: if the interceptor crashes, is unreachable, or returns a malformed verdict, stop the action.
+- Do not use observe-only callbacks as a governance control.
+- Bind approvals to a hash of the canonical action so a mutated request cannot reuse consent.
+- Inventory every entry point and put the contract on each one a cooperating host will run.

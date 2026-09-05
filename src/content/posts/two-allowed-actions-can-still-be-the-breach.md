@@ -35,3 +35,11 @@ Prompt injection matters here because the pair of tools can still run. If the in
 When one agent hands work to another, the second should not gain more power than the first, so blast radius should shrink along that chain and never grow. AWS has a Cedar sample for agents that hand work down a chain, and it makes the same structural point: at each hop, permissions only narrow.
 
 If your allowlist is a list of tools, you have described the parts. You have not described the session.
+
+## Recommendations
+
+- Encode prohibited tool pairs as session policy, not as a prompt.
+- If a session has read confidential data, refuse an external send in the same session.
+- Check composition outside the model, against what the session has already done.
+- On delegation, narrow permissions at each hop so blast radius cannot grow.
+- Replace per-tool allowlists with rules about which combinations you will not allow.

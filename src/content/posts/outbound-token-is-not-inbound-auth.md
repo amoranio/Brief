@@ -28,3 +28,11 @@ flowchart TD
 ```
 
 A bind to every interface makes the hole easier to find, but the architecture failure is not the bind alone. Configuring an outbound token is not inbound authentication. If the server can spend a privileged credential, callers must prove who they are before any tool runs, and that check has to fail closed when the credential is absent. Treat the stored token as Tier-0 material, put an explicit inbound gate in front of it, and do not read “we have an API token configured” as proof that the listener is authenticated.
+
+## Recommendations
+
+- Require an inbound authentication gate that fails closed when the caller credential is absent.
+- Do not treat a configured upstream token as proof that the MCP listener is authenticated.
+- Bind HTTP transports to loopback unless an explicit inbound gate is in place and tested.
+- Treat stored upstream tokens as Tier-0 material and rotate them if the listener was ever open.
+- Confirm tool dispatch cannot run until the caller has been authenticated.
