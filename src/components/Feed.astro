@@ -17,12 +17,10 @@ const { entries, showKind = false } = Astro.props;
 			<li>
 				<a href={entry.href}>
 					{showKind && entry.kind === 'pattern' && <span class="feed-kind">Pattern</span>}
-					<div class="feed-row">
-						<h2 class="feed-title">{entry.title}</h2>
-						<time class="feed-date" datetime={isoDate(entry.date)}>
-							{formatShortDate(entry.date)}
-						</time>
-					</div>
+					<time class="feed-date" datetime={isoDate(entry.date)}>
+						{formatShortDate(entry.date)}
+					</time>
+					<h2 class="feed-title">{entry.title}</h2>
 					<p class="dek">{entry.dek}</p>
 				</a>
 			</li>

@@ -42,7 +42,7 @@ The masthead is a single bar: **brief** on the left, **patterns / archive / tags
 - Home is the post feed.
 - `/archive/` lists every post and pattern.
 - `/tags/` lists every tag used by posts or patterns.
-- Theme follows `prefers-color-scheme` on first visit. The toggle writes `brief-theme` to `localStorage` and then wins.
+- Theme follows `prefers-color-scheme` on first visit (dark system → black canvas). The toggle writes `brief-theme` to `localStorage` and then wins.
 
 `/sitemap.xml` covers home, About, Archive, Tags, posts, patterns, and tag pages.
 
