@@ -737,6 +737,10 @@ function assignEdgePorts(
 }
 
 function facingSide(from: Box, to: Box): Side {
+	if (to.y >= from.y + from.h) return 'bottom';
+	if (from.y >= to.y + to.h) return 'top';
+	if (to.x >= from.x + from.w) return 'right';
+	if (from.x >= to.x + to.w) return 'left';
 	const cx = from.x + from.w / 2;
 	const cy = from.y + from.h / 2;
 	const tx = to.x + to.w / 2;
