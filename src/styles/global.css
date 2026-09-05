@@ -281,18 +281,6 @@ html[data-theme='dark'] .icon-moon {
 	transition: transform 0.18s ease, opacity 0.18s ease;
 }
 
-.hero {
-	margin-bottom: clamp(2.5rem, 6vw, 4rem);
-}
-
-.hero h1 {
-	margin: 0;
-}
-
-.hero .date {
-	margin-top: var(--space-4);
-}
-
 h1 {
 	font-size: var(--text-display);
 	line-height: var(--lh-display);
@@ -568,14 +556,42 @@ h2 {
 	height: auto;
 }
 
+/*
+ * Recolor baked diagram ink instead of filter: invert().
+ * Invert rasterizes 1.05px dashed polylines and washes the 5/4 dash pattern.
+ */
 @media (prefers-color-scheme: dark) {
-	:root:not([data-theme='light']) .diagram svg {
-		filter: invert(1);
+	:root:not([data-theme='light']) .diagram svg [stroke='#111111'] {
+		stroke: #f0f0fa;
+	}
+
+	:root:not([data-theme='light']) .diagram svg [fill='#111111'] {
+		fill: #f0f0fa;
+	}
+
+	:root:not([data-theme='light']) .diagram svg [fill='#5c5c5c'] {
+		fill: rgba(240, 240, 250, 0.55);
+	}
+
+	:root:not([data-theme='light']) .diagram svg [stroke='#d6d4cf'] {
+		stroke: rgba(240, 240, 250, 0.12);
 	}
 }
 
-:root[data-theme='dark'] .diagram svg {
-	filter: invert(1);
+:root[data-theme='dark'] .diagram svg [stroke='#111111'] {
+	stroke: #f0f0fa;
+}
+
+:root[data-theme='dark'] .diagram svg [fill='#111111'] {
+	fill: #f0f0fa;
+}
+
+:root[data-theme='dark'] .diagram svg [fill='#5c5c5c'] {
+	fill: rgba(240, 240, 250, 0.55);
+}
+
+:root[data-theme='dark'] .diagram svg [stroke='#d6d4cf'] {
+	stroke: rgba(240, 240, 250, 0.12);
 }
 
 .sources {
