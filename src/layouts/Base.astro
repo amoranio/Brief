@@ -1,6 +1,7 @@
 ---
 import '../styles/global.css';
 import Rail from '../components/Rail.astro';
+import Wordmark from '../components/Wordmark.astro';
 import { allTags, getPosts } from '../lib/collection';
 
 interface Props {
@@ -12,6 +13,7 @@ const { title, description } = Astro.props;
 const canonical = new URL(Astro.url.pathname, Astro.site);
 const posts = await getPosts();
 const tags = allTags(posts);
+const path = Astro.url.pathname.endsWith('/') ? Astro.url.pathname : `${Astro.url.pathname}/`;
 ---
 
 <!doctype html>
@@ -26,20 +28,27 @@ const tags = allTags(posts);
 	</head>
 	<body>
 		<input type="checkbox" id="rail-collapse" class="rail-collapse" />
-		<Rail posts={posts} tags={tags} pathname={Astro.url.pathname} />
-		<div class="shell">
+		<div class="page">
 			<header class="masthead">
-				<a class="wordmark" href="/">Brief.</a>
+				<a class="wordmark" href="/" aria-label="brief" aria-current={path === '/' ? 'page' : undefined}>
+					<Wordmark />
+				</a>
 				<nav>
-					<a href="/about/">About</a>
+					<a href="/about/" aria-current={path === '/about/' ? 'page' : undefined}>About</a>
 				</nav>
 			</header>
-			<main>
-				<slot />
-			</main>
-			<footer class="colophon">
-				© Ashley Moran · <a href="https://amoran.io">amoran.io</a>
-			</footer>
+			<Rail posts={posts} tags={tags} pathname={Astro.url.pathname} />
+			<div class="shell">
+				<main>
+					<slot />
+				</main>
+				<footer class="colophon">
+					© Ashley Moran · <a href="https://amoran.io">amoran.io</a>
+				</footer>
+			</div>
 		</div>
+		<a class="rail-edge" href="#index">Index</a>
+		<label class="rail-tab" for="rail-collapse">Index</label>
+		<a class="rail-scrim" href="#" aria-hidden="true"></a>
 	</body>
 </html>

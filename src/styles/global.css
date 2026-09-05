@@ -3,7 +3,12 @@
 	--fg: #111111;
 	--muted: #5c5c5c;
 	--rule: #d6d4cf;
-	--measure: 64ch;
+	--sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+	--serif: Georgia, 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Times New Roman', serif;
+	--rail: 17.75rem;
+	--gutter: 4.5rem;
+	--measure: 40.5rem;
+	--page: calc(var(--rail) + var(--gutter) + var(--measure));
 }
 
 * {
@@ -17,7 +22,7 @@ html {
 
 body {
 	margin: 0;
-	font-family: Georgia, 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Times New Roman', serif;
+	font-family: var(--serif);
 	font-size: 1.125rem;
 	line-height: 1.65;
 }
@@ -26,45 +31,61 @@ a {
 	color: inherit;
 }
 
-.shell {
-	max-width: var(--measure);
-	margin: 0 auto;
-	padding: 3.5rem 1.5rem 5rem;
+a:focus-visible,
+.rail-hide:focus-visible,
+.rail-tab:focus-visible {
+	outline: 1px solid var(--fg);
+	outline-offset: 3px;
 }
 
-@media (min-width: 720px) {
-	.shell {
-		padding: 5.5rem 2.25rem 8rem;
-	}
+.page {
+	max-width: var(--measure);
+	margin: 0 auto;
+	padding: 2.25rem 1.5rem 5rem 2.75rem;
 }
 
 .masthead {
 	display: flex;
 	justify-content: space-between;
-	align-items: baseline;
-	margin-bottom: 4.5rem;
+	align-items: center;
+	gap: 1.5rem;
+	margin-bottom: 3.25rem;
 }
 
 .wordmark {
-	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-	font-size: 1.2rem;
-	font-weight: 600;
-	letter-spacing: -0.03em;
+	display: inline-flex;
+	align-items: center;
+	color: var(--fg);
 	text-decoration: none;
+	line-height: 0;
+}
+
+.wordmark-mark {
+	display: block;
+	height: 1.7rem;
+	width: auto;
+}
+
+.wordmark:hover {
+	color: var(--fg);
+	opacity: 0.5;
 }
 
 .masthead nav {
-	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-	font-size: 0.9rem;
+	font-family: var(--sans);
+	font-size: 0.92rem;
+	font-weight: 500;
+	letter-spacing: -0.01em;
 }
 
 .masthead nav a {
+	color: var(--muted);
 	text-decoration: none;
 }
 
 .masthead nav a:hover,
-.wordmark:hover {
-	text-decoration: underline;
+.masthead nav a[aria-current='page'] {
+	color: var(--fg);
 }
 
 h1 {
@@ -76,7 +97,7 @@ h1 {
 }
 
 .date {
-	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+	font-family: var(--sans);
 	font-size: 0.85rem;
 	color: var(--muted);
 }
@@ -107,7 +128,7 @@ h1 {
 	list-style: none;
 	margin: -0.55rem 0 2rem;
 	padding: 0;
-	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+	font-family: var(--sans);
 	font-size: 0.8rem;
 	color: var(--muted);
 }
@@ -117,7 +138,7 @@ h1 {
 }
 
 .tags a:hover {
-	text-decoration: underline;
+	color: var(--fg);
 }
 
 .diagram {
@@ -137,7 +158,7 @@ h1 {
 }
 
 .sources h2 {
-	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+	font-family: var(--sans);
 	font-size: 0.85rem;
 	font-weight: 600;
 	letter-spacing: 0.04em;
@@ -195,17 +216,18 @@ h1 {
 
 .colophon {
 	margin-top: 5.5rem;
-	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+	font-family: var(--sans);
 	font-size: 0.85rem;
 	color: var(--muted);
 }
 
 .colophon a {
+	color: var(--muted);
 	text-decoration: none;
 }
 
 .colophon a:hover {
-	text-decoration: underline;
+	color: var(--fg);
 }
 
 .rail-collapse {
@@ -221,38 +243,55 @@ h1 {
 }
 
 .rail {
-	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-	font-size: 0.78rem;
+	font-family: var(--sans);
+	font-size: 0.94rem;
 	line-height: 1.4;
 	background: var(--bg);
 }
 
+.rail-nav {
+	display: block;
+}
+
 .rail a {
+	color: var(--muted);
 	text-decoration: none;
 }
 
-.rail a:hover,
+.rail a:hover {
+	color: var(--fg);
+}
+
 .rail a[aria-current='page'] {
-	text-decoration: underline;
+	color: var(--fg);
 }
 
 .rail-head {
 	display: flex;
 	justify-content: flex-end;
-	margin-bottom: 1.75rem;
+	margin-bottom: 1.5rem;
 }
 
 .rail-dismiss,
 .rail-hide {
 	cursor: pointer;
 	color: var(--muted);
+	font-size: 0.8rem;
+	font-weight: 500;
+	letter-spacing: 0.02em;
+}
+
+.rail-dismiss:hover,
+.rail-hide:hover {
+	color: var(--fg);
 }
 
 .rail-kicker {
-	margin: 1.85rem 0 0.5rem;
-	font-size: 0.68rem;
+	margin: 2.15rem 0 0.7rem;
+	padding: 0;
+	font-size: 0.7rem;
 	font-weight: 600;
-	letter-spacing: 0.08em;
+	letter-spacing: 0.12em;
 	text-transform: uppercase;
 	color: var(--muted);
 }
@@ -269,20 +308,47 @@ h1 {
 	padding: 0;
 }
 
-.rail-posts li + li,
+.rail-posts a,
+.rail-tags a,
+.rail-site a {
+	display: block;
+	padding: 0.4rem 0 0.4rem 0.75rem;
+	margin-left: -0.75rem;
+	border-left: 1.5px solid transparent;
+}
+
+.rail-posts a:hover,
+.rail-tags a:hover,
+.rail-site a:hover,
+.rail-posts a[aria-current='page'],
+.rail-tags a[aria-current='page'],
+.rail-site a[aria-current='page'] {
+	border-left-color: var(--fg);
+}
+
+.rail-posts li + li {
+	margin-top: 0.35rem;
+}
+
 .rail-tags li + li,
 .rail-site li + li {
-	margin-top: 0.75rem;
+	margin-top: 0.15rem;
 }
 
 .rail-posts time {
 	display: block;
-	color: var(--muted);
-	font-size: 0.68rem;
+	color: inherit;
+	opacity: 0.72;
+	font-size: 0.74rem;
+	letter-spacing: 0.01em;
+	margin-bottom: 0.12rem;
 }
 
 .rail-posts span {
 	display: block;
+	font-size: 0.94rem;
+	line-height: 1.35;
+	font-weight: 500;
 }
 
 .rail-edge,
@@ -292,15 +358,15 @@ h1 {
 	top: 38%;
 	z-index: 20;
 	margin: 0;
-	padding: 0.7rem 0.4rem;
+	padding: 0.75rem 0.45rem;
 	border: 1px solid var(--rule);
 	border-left: none;
 	background: var(--bg);
 	color: var(--muted);
-	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-	font-size: 0.68rem;
+	font-family: var(--sans);
+	font-size: 0.7rem;
 	font-weight: 600;
-	letter-spacing: 0.08em;
+	letter-spacing: 0.1em;
 	text-transform: uppercase;
 	text-decoration: none;
 	writing-mode: vertical-rl;
@@ -308,23 +374,24 @@ h1 {
 	cursor: pointer;
 }
 
+.rail-edge:hover,
+.rail-tab:hover {
+	color: var(--fg);
+}
+
 .rail-scrim {
 	display: none;
 }
 
-@media (max-width: 1239px) {
-	.shell {
-		padding-left: 2.75rem;
-	}
-
+@media (max-width: 1119px) {
 	.rail {
 		position: fixed;
 		top: 0;
 		bottom: 0;
 		left: 0;
 		z-index: 30;
-		width: min(17.5rem, 86vw);
-		padding: 1.35rem 1.25rem 3rem;
+		width: min(20rem, 88vw);
+		padding: 1.4rem 1.45rem 3rem;
 		border-right: 1px solid var(--rule);
 		overflow-y: auto;
 		transform: translateX(-100%);
@@ -340,11 +407,11 @@ h1 {
 		display: none;
 	}
 
-	.rail:target ~ .rail-edge {
+	.page:has(.rail:target) ~ .rail-edge {
 		display: none;
 	}
 
-	.rail:target ~ .rail-scrim {
+	.page:has(.rail:target) ~ .rail-scrim {
 		display: block;
 		position: fixed;
 		inset: 0;
@@ -353,23 +420,48 @@ h1 {
 	}
 }
 
-@media (min-width: 1240px) {
-	.rail {
-		position: fixed;
-		top: 0;
-		bottom: 0;
-		left: 0;
-		z-index: 8;
-		width: 14.5rem;
-		padding: 5.5rem 1.35rem 3rem;
-		border-right: 1px solid var(--rule);
-		overflow-y: auto;
-		transform: translateX(0);
-		transition: transform 0.28s ease;
+@media (min-width: 720px) and (max-width: 1119px) {
+	.page {
+		padding: 3.5rem 2.25rem 8rem 2.75rem;
 	}
 
-	.rail-collapse:checked ~ .rail {
-		transform: translateX(-100%);
+	.masthead {
+		margin-bottom: 4rem;
+	}
+}
+
+@media (min-width: 1120px) {
+	.page {
+		display: grid;
+		grid-template-columns: var(--rail) minmax(0, var(--measure));
+		grid-template-areas:
+			'mast mast'
+			'rail main';
+		column-gap: var(--gutter);
+		max-width: var(--page);
+		padding: 3.25rem 2.5rem 8rem;
+	}
+
+	.masthead {
+		grid-area: mast;
+		margin-bottom: 3.75rem;
+	}
+
+	.rail {
+		grid-area: rail;
+		position: sticky;
+		top: 2rem;
+		align-self: start;
+		width: auto;
+		padding: 0;
+		border: 0;
+		overflow: visible;
+		transform: none;
+	}
+
+	.shell {
+		grid-area: main;
+		min-width: 0;
 	}
 
 	.rail-dismiss,
@@ -381,11 +473,26 @@ h1 {
 		display: none;
 	}
 
+	.rail-collapse:checked ~ .page {
+		display: block;
+		max-width: var(--measure);
+	}
+
+	.rail-collapse:checked ~ .page .rail {
+		display: none;
+	}
+
 	.rail-collapse:checked ~ .rail-tab {
 		display: block;
 	}
 
 	.rail-scrim {
 		display: none;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.rail {
+		transition: none;
 	}
 }

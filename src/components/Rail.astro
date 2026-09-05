@@ -23,50 +23,48 @@ function here(href: string): boolean {
 		<label class="rail-hide" for="rail-collapse">Hide</label>
 	</div>
 
-	<p class="rail-kicker">Posts</p>
-	<ol class="rail-posts">
-		{
-			posts.map((post) => {
-				const href = `/${post.id}/`;
-				return (
-					<li>
-						<a href={href} aria-current={here(href) ? 'page' : undefined}>
-							<time datetime={isoDate(post.data.date)}>{formatShortDate(post.data.date)}</time>
-							<span>{post.data.title}</span>
-						</a>
-					</li>
-				);
-			})
-		}
-	</ol>
+	<nav class="rail-nav" aria-label="Index">
+		<h2 class="rail-kicker">Posts</h2>
+		<ol class="rail-posts">
+			{
+				posts.map((post) => {
+					const href = `/${post.id}/`;
+					return (
+						<li>
+							<a href={href} aria-current={here(href) ? 'page' : undefined}>
+								<time datetime={isoDate(post.data.date)}>{formatShortDate(post.data.date)}</time>
+								<span>{post.data.title}</span>
+							</a>
+						</li>
+					);
+				})
+			}
+		</ol>
 
-	<p class="rail-kicker">Tags</p>
-	<ul class="rail-tags">
-		{
-			tags.map((tag) => {
-				const href = `/tags/${tag}/`;
-				return (
-					<li>
-						<a href={href} aria-current={here(href) ? 'page' : undefined}>
-							{tag}
-						</a>
-					</li>
-				);
-			})
-		}
-	</ul>
+		<h2 class="rail-kicker">Tags</h2>
+		<ul class="rail-tags">
+			{
+				tags.map((tag) => {
+					const href = `/tags/${tag}/`;
+					return (
+						<li>
+							<a href={href} aria-current={here(href) ? 'page' : undefined}>
+								{tag}
+							</a>
+						</li>
+					);
+				})
+			}
+		</ul>
 
-	<p class="rail-kicker">Site</p>
-	<ul class="rail-site">
-		<li>
-			<a href="/about/" aria-current={here('/about/') ? 'page' : undefined}>About</a>
-		</li>
-		<li>
-			<a href="/rss.xml">RSS</a>
-		</li>
-	</ul>
+		<h2 class="rail-kicker">Site</h2>
+		<ul class="rail-site">
+			<li>
+				<a href="/about/" aria-current={here('/about/') ? 'page' : undefined}>About</a>
+			</li>
+			<li>
+				<a href="/rss.xml">RSS</a>
+			</li>
+		</ul>
+	</nav>
 </aside>
-
-<a class="rail-edge" href="#index">Index</a>
-<label class="rail-tab" for="rail-collapse">Index</label>
-<a class="rail-scrim" href="#" aria-hidden="true"></a>
