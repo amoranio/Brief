@@ -1,0 +1,61 @@
+---
+import { getCollection, render } from 'astro:content';
+import type { CollectionEntry } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import { getPosts, isoDate } from '../../lib/collection';
+import { formatDate } from '../../lib/dates';
+
+export async function getStaticPaths() {
+	const patterns = await getCollection('patterns');
+	return patterns.map((pattern) => ({
+		params: { slug: pattern.id },
+		props: { pattern },
+	}));
+}
+
+interface Props {
+	pattern: CollectionEntry<'patterns'>;
+}
+
+const { pattern } = Astro.props;
+const { Content } = await render(pattern);
+const relatedSlug = pattern.data.relatedPost;
+const relatedPost = relatedSlug
+	? (await getPosts()).find((post) => post.id === relatedSlug)
+	: undefined;
+const relatedHref = relatedSlug ? `/${relatedSlug}/` : undefined;
+const relatedTitle = relatedPost?.data.title ?? relatedSlug;
+---
+
+<Base title={`${pattern.data.title} · Brief`} description={pattern.data.dek}>
+	<article>
+		<div class="date">
+			<time datetime={isoDate(pattern.data.date)}>{formatDate(pattern.data.date)}</time>
+		</div>
+		<h1>{pattern.data.title}</h1>
+		<div class="body">
+			<Content />
+			{
+				relatedHref && (
+					<p>
+						Related post: <a href={relatedHref}>{relatedTitle}</a>.
+					</p>
+				)
+			}
+		</div>
+		{
+			pattern.data.sources.length > 0 && (
+				<section class="sources">
+					<h2>Sources</h2>
+					<ol>
+						{pattern.data.sources.map((href) => (
+							<li>
+								<a href={href}>{href}</a>
+							</li>
+						))}
+					</ol>
+				</section>
+			)
+		}
+	</article>
+</Base>
