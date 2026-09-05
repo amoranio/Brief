@@ -1,7 +1,12 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { inspectMermaidDiagram, renderMermaidSvg, segmentHitsBox } from '../src/lib/mermaid-svg.ts';
+import {
+	inspectMermaidDiagram,
+	renderMermaidSvg,
+	segmentHitsBox,
+	segmentsCross,
+} from '../src/lib/mermaid-svg.ts';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const postsDir = join(root, 'src/content/posts');
@@ -12,6 +17,7 @@ const FOCUS = [
 	'a-hook-is-not-a-security-boundary.md',
 	'deny-has-to-mean-deny.md',
 	'two-allowed-actions-can-still-be-the-breach.md',
+	'sandbox-on-is-not-containment.md',
 ];
 
 const INSET = 1;
@@ -54,6 +60,18 @@ function assertOrthogonal(source: string, label: string): void {
 		}
 	}
 
+	for (let i = 0; i < inspected.segments.length; i++) {
+		for (let j = i + 1; j < inspected.segments.length; j++) {
+			if (segmentsCross(inspected.segments[i], inspected.segments[j])) {
+				const a = inspected.segments[i];
+				const b = inspected.segments[j];
+				throw new Error(
+					`${label}: segments cross (${a.x1},${a.y1})-(${a.x2},${a.y2}) and (${b.x1},${b.y1})-(${b.x2},${b.y2})`,
+				);
+			}
+		}
+	}
+
 	if (source.includes('-.->') && !inspected.segments.some((seg) => seg.dashed)) {
 		throw new Error(`${label}: expected dashed edge for -.->`);
 	}
@@ -62,23 +80,87 @@ function assertOrthogonal(source: string, label: string): void {
 	}
 }
 
+function assertRecommendations(markdown: string, file: string): void {
+	const match = markdown.match(/^## Recommendations\n\n((?:- .+\n)+)/m);
+	if (!match) {
+		throw new Error(`${file}: missing ## Recommendations with a bullet list`);
+	}
+	const bullets = match[1].trim().split('\n').filter((line) => line.startsWith('- '));
+	if (bullets.length < 3 || bullets.length > 5) {
+		throw new Error(`${file}: Recommendations must have 3–5 bullets (found ${bullets.length})`);
+	}
+	const after = markdown.slice(markdown.indexOf(match[0]) + match[0].length);
+	if (/^## /m.test(after)) {
+		throw new Error(`${file}: Recommendations must be the last heading (before Sources)`);
+	}
+}
+
 const failures: string[] = [];
 
-for (const file of readdirSync(postsDir).sort()) {
-	if (!file.endsWith('.md')) continue;
+function check(label: string, run: () => void): void {
+	try {
+		run();
+		console.log(`ok  ${label}`);
+	} catch (error) {
+		const message = error instanceof Error ? error.message : String(error);
+		failures.push(message);
+		console.error(`fail ${message}`);
+	}
+}
+
+check('segmentsCross: shared endpoint allowed', () => {
+	if (
+		segmentsCross(
+			{ x1: 0, y1: 0, x2: 10, y2: 0 },
+			{ x1: 10, y1: 0, x2: 10, y2: 8 },
+		)
+	) {
+		throw new Error('shared endpoint should not count as a crossing');
+	}
+});
+
+check('segmentsCross: proper crossing fails', () => {
+	if (
+		!segmentsCross(
+			{ x1: 0, y1: 4, x2: 10, y2: 4 },
+			{ x1: 5, y1: 0, x2: 5, y2: 8 },
+		)
+	) {
+		throw new Error('interior H/V intersection should count as a crossing');
+	}
+});
+
+check('segmentsCross: collinear overlap fails', () => {
+	if (
+		!segmentsCross(
+			{ x1: 0, y1: 0, x2: 10, y2: 0 },
+			{ x1: 5, y1: 0, x2: 15, y2: 0 },
+		)
+	) {
+		throw new Error('collinear overlap should count as a crossing');
+	}
+});
+
+check('segmentsCross: T-junction fails', () => {
+	if (
+		!segmentsCross(
+			{ x1: 0, y1: 0, x2: 10, y2: 0 },
+			{ x1: 5, y1: 0, x2: 5, y2: 8 },
+		)
+	) {
+		throw new Error('T-junction should count as a crossing');
+	}
+});
+
+const postFiles = readdirSync(postsDir).filter((file) => file.endsWith('.md')).sort();
+
+for (const file of postFiles) {
 	const markdown = readFileSync(join(postsDir, file), 'utf8');
+	check(`${file}:recommendations`, () => assertRecommendations(markdown, file));
 	const blocks = extractMermaid(markdown);
-	if (blocks.length === 0) continue;
 	blocks.forEach((source, index) => {
 		const label = `${file}#${index + 1}`;
-		try {
-			assertOrthogonal(source, label);
-			console.log(`ok  ${label}`);
-		} catch (error) {
-			const message = error instanceof Error ? error.message : String(error);
-			failures.push(message);
-			console.error(`fail ${message}`);
-		}
+		check(label, () => assertOrthogonal(source, label));
 	});
 }
 
@@ -89,17 +171,10 @@ const skip = `flowchart LR
   det[Detect] -.-> d
 `;
 
-try {
-	assertOrthogonal(skip, 'synthetic-skip');
-	console.log('ok  synthetic-skip');
-} catch (error) {
-	const message = error instanceof Error ? error.message : String(error);
-	failures.push(message);
-	console.error(`fail ${message}`);
-}
+check('synthetic-skip', () => assertOrthogonal(skip, 'synthetic-skip'));
 
-if (FOCUS.some((file) => !readdirSync(postsDir).includes(file))) {
-	failures.push('missing one of the five live posts');
+if (FOCUS.some((file) => !postFiles.includes(file))) {
+	failures.push('missing one of the focused live posts');
 }
 
 if (failures.length) {

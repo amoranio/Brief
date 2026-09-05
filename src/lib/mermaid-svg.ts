@@ -228,7 +228,7 @@ function parseMermaid(source: string): {
 	return { direction, caption, nodes, edges, subgraphs };
 }
 
-function rankNodes(ids: string[], edges: EdgeDef[]): Map<string, number> {
+function rankNodes(ids: string[], edges: EdgeDef[], ignoreDashed = false): Map<string, number> {
 	const incoming = new Map<string, string[]>();
 	const outgoing = new Map<string, string[]>();
 	for (const id of ids) {
@@ -236,6 +236,7 @@ function rankNodes(ids: string[], edges: EdgeDef[]): Map<string, number> {
 		outgoing.set(id, []);
 	}
 	for (const edge of edges) {
+		if (ignoreDashed && edge.dashed) continue;
 		if (!incoming.has(edge.to) || !outgoing.has(edge.from)) continue;
 		incoming.get(edge.to)!.push(edge.from);
 		outgoing.get(edge.from)!.push(edge.to);
@@ -258,6 +259,14 @@ function rankNodes(ids: string[], edges: EdgeDef[]): Map<string, number> {
 
 	for (const id of ids) walk(id);
 	return ranks;
+}
+
+function hasSolidEdge(id: string, edges: EdgeDef[], ids: Set<string>): boolean {
+	return edges.some(
+		(edge) =>
+			!edge.dashed &&
+			((edge.from === id && ids.has(edge.to)) || (edge.to === id && ids.has(edge.from))),
+	);
 }
 
 function connectedGroups(ids: string[], edges: EdgeDef[]): string[][] {
@@ -303,9 +312,16 @@ function layoutGroup(
 	edges: EdgeDef[],
 	horizontal: boolean,
 ): { boxes: Map<string, Box>; width: number; height: number } {
-	const ranks = rankNodes(ids, edges);
+	const idSet = new Set(ids);
+	const dashedOnly = ids.filter(
+		(id) =>
+			!hasSolidEdge(id, edges, idSet) &&
+			edges.some((edge) => edge.dashed && (edge.from === id || edge.to === id) && idSet.has(edge.from === id ? edge.to : edge.from)),
+	);
+	const solidIds = ids.filter((id) => !dashedOnly.includes(id));
+	const ranks = rankNodes(solidIds.length ? solidIds : ids, edges, true);
 	const columns = new Map<number, string[]>();
-	for (const id of ids) {
+	for (const id of solidIds.length ? solidIds : ids) {
 		const rank = ranks.get(id) ?? 0;
 		const list = columns.get(rank) ?? [];
 		list.push(id);
@@ -356,6 +372,8 @@ function layoutGroup(
 		cursor += thickness + RANK_GAP;
 	}
 
+	placeDashedBesideTargets(dashedOnly, nodes, edges, boxes, sizes, idSet, horizontal);
+
 	let width = 0;
 	let height = 0;
 	for (const box of boxes.values()) {
@@ -363,6 +381,74 @@ function layoutGroup(
 		height = Math.max(height, box.y + box.h);
 	}
 	return { boxes, width, height };
+}
+
+function boxesOverlap(a: Box, b: Box, gap = NODE_GAP / 2): boolean {
+	return a.x < b.x + b.w + gap && a.x + a.w + gap > b.x && a.y < b.y + b.h + gap && a.y + a.h + gap > b.y;
+}
+
+function placeDashedBesideTargets(
+	dashedOnly: string[],
+	nodes: Map<string, NodeDef>,
+	edges: EdgeDef[],
+	boxes: Map<string, Box>,
+	sizes: Map<string, { w: number; h: number }>,
+	idSet: Set<string>,
+	horizontal: boolean,
+): void {
+	let pending = [...dashedOnly];
+	let guard = 0;
+	while (pending.length && guard++ < dashedOnly.length + 2) {
+		const next: string[] = [];
+		for (const id of pending) {
+			const neighbors: string[] = [];
+			for (const edge of edges) {
+				if (!edge.dashed) continue;
+				const other = edge.from === id ? edge.to : edge.to === id ? edge.from : null;
+				if (other && idSet.has(other) && boxes.has(other)) neighbors.push(other);
+			}
+			if (neighbors.length === 0) {
+				next.push(id);
+				continue;
+			}
+			neighbors.sort((a, b) => {
+				const aBox = boxes.get(a)!;
+				const bBox = boxes.get(b)!;
+				return aBox.x + aBox.y - (bBox.x + bBox.y);
+			});
+			const target = boxes.get(neighbors[0])!;
+			const size = sizes.get(id) ?? nodeSize(nodes.get(id)!);
+			const candidates: Box[] = horizontal
+				? [
+						{ x: target.x + (target.w - size.w) / 2, y: target.y + target.h + NODE_GAP, w: size.w, h: size.h },
+						{ x: target.x + (target.w - size.w) / 2, y: target.y - size.h - NODE_GAP, w: size.w, h: size.h },
+						{ x: target.x + target.w + NODE_GAP, y: target.y + (target.h - size.h) / 2, w: size.w, h: size.h },
+						{ x: target.x - size.w - NODE_GAP, y: target.y + (target.h - size.h) / 2, w: size.w, h: size.h },
+					]
+				: [
+						{ x: target.x + target.w + NODE_GAP, y: target.y + (target.h - size.h) / 2, w: size.w, h: size.h },
+						{ x: target.x - size.w - NODE_GAP, y: target.y + (target.h - size.h) / 2, w: size.w, h: size.h },
+						{ x: target.x + (target.w - size.w) / 2, y: target.y + target.h + NODE_GAP, w: size.w, h: size.h },
+						{ x: target.x + (target.w - size.w) / 2, y: target.y - size.h - NODE_GAP, w: size.w, h: size.h },
+					];
+			const placed = [...boxes.values()];
+			const box =
+				candidates.find((candidate) => !placed.some((other) => boxesOverlap(candidate, other))) ??
+				candidates[0];
+			boxes.set(id, box);
+		}
+		pending = next.filter((id) => !boxes.has(id));
+	}
+
+	let minX = 0;
+	let minY = 0;
+	for (const box of boxes.values()) {
+		minX = Math.min(minX, box.x);
+		minY = Math.min(minY, box.y);
+	}
+	if (minX < 0 || minY < 0) {
+		shiftBoxes(boxes, minX < 0 ? -minX : 0, minY < 0 ? -minY : 0);
+	}
 }
 
 function shiftBoxes(boxes: Map<string, Box>, dx: number, dy: number): void {
@@ -456,6 +542,79 @@ export function segmentHitsBox(
 	return maxX > left && minX < right && maxY > top && minY < bottom;
 }
 
+const CROSS_EPS = 0.05;
+
+function nearlyEqual(a: number, b: number, eps = CROSS_EPS): boolean {
+	return Math.abs(a - b) <= eps;
+}
+
+function inRange(value: number, a: number, b: number, eps = CROSS_EPS): boolean {
+	return value >= Math.min(a, b) - eps && value <= Math.max(a, b) + eps;
+}
+
+function rangeOverlapInterior(a1: number, a2: number, b1: number, b2: number, eps = CROSS_EPS): boolean {
+	return Math.min(Math.max(a1, a2), Math.max(b1, b2)) - Math.max(Math.min(a1, a2), Math.min(b1, b2)) > eps;
+}
+
+function isEndpoint(x: number, y: number, seg: Pick<Segment, 'x1' | 'y1' | 'x2' | 'y2'>): boolean {
+	return (
+		(nearlyEqual(x, seg.x1) && nearlyEqual(y, seg.y1)) ||
+		(nearlyEqual(x, seg.x2) && nearlyEqual(y, seg.y2))
+	);
+}
+
+/** True when two axis-aligned segments cross, T-junction, or overlap. Shared endpoints are allowed. */
+export function segmentsCross(
+	a: Pick<Segment, 'x1' | 'y1' | 'x2' | 'y2'>,
+	b: Pick<Segment, 'x1' | 'y1' | 'x2' | 'y2'>,
+): boolean {
+	const aH = nearlyEqual(a.y1, a.y2);
+	const aV = nearlyEqual(a.x1, a.x2);
+	const bH = nearlyEqual(b.y1, b.y2);
+	const bV = nearlyEqual(b.x1, b.x2);
+	if ((aH && aV) || (bH && bV)) return false;
+
+	if (aH && bH) {
+		if (!nearlyEqual(a.y1, b.y1)) return false;
+		return rangeOverlapInterior(a.x1, a.x2, b.x1, b.x2);
+	}
+	if (aV && bV) {
+		if (!nearlyEqual(a.x1, b.x1)) return false;
+		return rangeOverlapInterior(a.y1, a.y2, b.y1, b.y2);
+	}
+	if (aH && bV) {
+		const y = a.y1;
+		const x = b.x1;
+		if (!inRange(x, a.x1, a.x2) || !inRange(y, b.y1, b.y2)) return false;
+		return !(isEndpoint(x, y, a) && isEndpoint(x, y, b));
+	}
+	if (aV && bH) return segmentsCross(b, a);
+	return false;
+}
+
+function pathSegments(points: Point[], dashed = false): Segment[] {
+	const segments: Segment[] = [];
+	for (let i = 1; i < points.length; i++) {
+		segments.push({
+			x1: points[i - 1].x,
+			y1: points[i - 1].y,
+			x2: points[i].x,
+			y2: points[i].y,
+			dashed,
+		});
+	}
+	return segments;
+}
+
+function pathCrossesReserved(points: Point[], reserved: Segment[]): boolean {
+	for (const seg of pathSegments(points)) {
+		for (const other of reserved) {
+			if (segmentsCross(seg, other)) return true;
+		}
+	}
+	return false;
+}
+
 function fmt(value: number): string {
 	return Number.isInteger(value) ? String(value) : value.toFixed(2).replace(/\.?0+$/, '');
 }
@@ -487,11 +646,94 @@ function port(box: Box, side: Side): Point {
 }
 
 function outward(box: Box, side: Side, dist: number): Point {
-	const p = port(box, side);
-	if (side === 'left') return { x: p.x - dist, y: p.y };
-	if (side === 'right') return { x: p.x + dist, y: p.y };
-	if (side === 'top') return { x: p.x, y: p.y - dist };
-	return { x: p.x, y: p.y + dist };
+	return outwardFrom(port(box, side), side, dist);
+}
+
+function outwardFrom(point: Point, side: Side, dist: number): Point {
+	if (side === 'left') return { x: point.x - dist, y: point.y };
+	if (side === 'right') return { x: point.x + dist, y: point.y };
+	if (side === 'top') return { x: point.x, y: point.y - dist };
+	return { x: point.x, y: point.y + dist };
+}
+
+function portsAlong(box: Box, side: Side, count: number): Point[] {
+	if (count <= 1) return [port(box, side)];
+	const points: Point[] = [];
+	for (let i = 0; i < count; i++) {
+		const t = (i + 1) / (count + 1);
+		if (side === 'top') points.push({ x: box.x + box.w * t, y: box.y });
+		else if (side === 'bottom') points.push({ x: box.x + box.w * t, y: box.y + box.h });
+		else if (side === 'left') points.push({ x: box.x, y: box.y + box.h * t });
+		else points.push({ x: box.x + box.w, y: box.y + box.h * t });
+	}
+	return points;
+}
+
+function otherCenter(edge: EdgeDef, self: string, boxes: Map<string, Box>): Point {
+	const other = edge.from === self ? edge.to : edge.from;
+	const box = boxes.get(other)!;
+	return { x: box.x + box.w / 2, y: box.y + box.h / 2 };
+}
+
+function assignEdgePorts(
+	edges: EdgeDef[],
+	boxes: Map<string, Box>,
+): Map<EdgeDef, { fromSide: Side; toSide: Side; fromPoint: Point; toPoint: Point }> {
+	const chosen = edges.map((edge) => {
+		const from = boxes.get(edge.from)!;
+		const to = boxes.get(edge.to)!;
+		return {
+			edge,
+			fromSide: facingSide(from, to),
+			toSide: facingSide(to, from),
+		};
+	});
+
+	const groups = new Map<string, { node: string; side: Side; items: { edge: EdgeDef; as: 'from' | 'to' }[] }>();
+	for (const item of chosen) {
+		for (const [node, side, as] of [
+			[item.edge.from, item.fromSide, 'from'] as const,
+			[item.edge.to, item.toSide, 'to'] as const,
+		]) {
+			const key = `${node}:${side}`;
+			const group = groups.get(key) ?? { node, side, items: [] };
+			group.items.push({ edge: item.edge, as });
+			groups.set(key, group);
+		}
+	}
+
+	const assigned = new Map<EdgeDef, { fromSide: Side; toSide: Side; fromPoint?: Point; toPoint?: Point }>();
+	for (const item of chosen) {
+		assigned.set(item.edge, { fromSide: item.fromSide, toSide: item.toSide });
+	}
+
+	for (const group of groups.values()) {
+		const box = boxes.get(group.node)!;
+		group.items.sort((a, b) => {
+			const ac = otherCenter(a.edge, group.node, boxes);
+			const bc = otherCenter(b.edge, group.node, boxes);
+			if (group.side === 'top' || group.side === 'bottom') return ac.x - bc.x;
+			return ac.y - bc.y;
+		});
+		const ports = portsAlong(box, group.side, group.items.length);
+		group.items.forEach((item, index) => {
+			const current = assigned.get(item.edge)!;
+			if (item.as === 'from') current.fromPoint = ports[index];
+			else current.toPoint = ports[index];
+		});
+	}
+
+	return new Map(
+		[...assigned.entries()].map(([edge, value]) => [
+			edge,
+			{
+				fromSide: value.fromSide,
+				toSide: value.toSide,
+				fromPoint: value.fromPoint ?? port(boxes.get(edge.from)!, value.fromSide),
+				toPoint: value.toPoint ?? port(boxes.get(edge.to)!, value.toSide),
+			},
+		]),
+	);
 }
 
 function facingSide(from: Box, to: Box): Side {
@@ -546,37 +788,54 @@ function pathLength(points: Point[]): number {
 	return length;
 }
 
-function blockedSegment(a: Point, b: Point, obstacles: Box[]): boolean {
+function blockedSegment(a: Point, b: Point, obstacles: Box[], reserved: Segment[] = []): boolean {
 	if (a.x !== b.x && a.y !== b.y) return true;
 	for (const box of obstacles) {
 		if (segmentHitsBox(a.x, a.y, b.x, b.y, box)) return true;
 	}
+	const candidate: Segment = { x1: a.x, y1: a.y, x2: b.x, y2: b.y, dashed: false };
+	for (const other of reserved) {
+		if (segmentsCross(candidate, other)) return true;
+	}
 	return false;
 }
 
-function tryLPath(start: Point, end: Point, obstacles: Box[]): Point[] | null {
+function tryLPath(start: Point, end: Point, obstacles: Box[], reserved: Segment[] = []): Point[] | null {
 	if (start.x === end.x || start.y === end.y) {
-		if (!blockedSegment(start, end, obstacles)) return [start, end];
+		if (!blockedSegment(start, end, obstacles, reserved)) return [start, end];
 		return null;
 	}
 	const elbowA = { x: end.x, y: start.y };
-	if (!blockedSegment(start, elbowA, obstacles) && !blockedSegment(elbowA, end, obstacles)) {
+	if (
+		!blockedSegment(start, elbowA, obstacles, reserved) &&
+		!blockedSegment(elbowA, end, obstacles, reserved)
+	) {
 		return [start, elbowA, end];
 	}
 	const elbowB = { x: start.x, y: end.y };
-	if (!blockedSegment(start, elbowB, obstacles) && !blockedSegment(elbowB, end, obstacles)) {
+	if (
+		!blockedSegment(start, elbowB, obstacles, reserved) &&
+		!blockedSegment(elbowB, end, obstacles, reserved)
+	) {
 		return [start, elbowB, end];
 	}
 	return null;
 }
 
-function gridPath(start: Point, end: Point, obstacles: Box[], bounds: Box): Point[] | null {
+function gridPath(
+	start: Point,
+	end: Point,
+	obstacles: Box[],
+	bounds: Box,
+	reserved: Segment[] = [],
+): Point[] | null {
 	const xs = uniqueSorted([
 		bounds.x,
 		bounds.x + bounds.w,
 		start.x,
 		end.x,
 		...obstacles.flatMap((box) => [box.x, box.x + box.w, box.x - 1, box.x + box.w + 1]),
+		...reserved.flatMap((seg) => [seg.x1, seg.x2, seg.x1 - ROUTE_MARGIN, seg.x1 + ROUTE_MARGIN]),
 	]);
 	const ys = uniqueSorted([
 		bounds.y,
@@ -584,6 +843,7 @@ function gridPath(start: Point, end: Point, obstacles: Box[], bounds: Box): Poin
 		start.y,
 		end.y,
 		...obstacles.flatMap((box) => [box.y, box.y + box.h, box.y - 1, box.y + box.h + 1]),
+		...reserved.flatMap((seg) => [seg.y1, seg.y2, seg.y1 - ROUTE_MARGIN, seg.y1 + ROUTE_MARGIN]),
 	]);
 
 	const xIndex = new Map(xs.map((value, i) => [value, i]));
@@ -639,7 +899,7 @@ function gridPath(start: Point, end: Point, obstacles: Box[], bounds: Box): Poin
 			if (ni < 0 || nj < 0 || ni >= xs.length || nj >= ys.length) continue;
 			const from = { x: xs[current.i], y: ys[current.j] };
 			const to = { x: xs[ni], y: ys[nj] };
-			if (blockedSegment(from, to, obstacles)) continue;
+			if (blockedSegment(from, to, obstacles, reserved)) continue;
 			const step = Math.abs(to.x - from.x) + Math.abs(to.y - from.y);
 			const turn = current.dir !== -1 && current.dir !== delta.dir ? TURN_COST : 0;
 			const nextCost = current.cost + step + turn;
@@ -655,47 +915,63 @@ function gridPath(start: Point, end: Point, obstacles: Box[], bounds: Box): Poin
 	return null;
 }
 
-function aroundBounds(start: Point, end: Point, bounds: Box): Point[] {
-	const top = [
-		start,
-		{ x: start.x, y: bounds.y },
-		{ x: end.x, y: bounds.y },
-		end,
+function aroundBounds(start: Point, end: Point, bounds: Box, reserved: Segment[] = []): Point[] {
+	const candidates = [
+		[start, { x: start.x, y: bounds.y }, { x: end.x, y: bounds.y }, end],
+		[start, { x: start.x, y: bounds.y + bounds.h }, { x: end.x, y: bounds.y + bounds.h }, end],
+		[start, { x: bounds.x, y: start.y }, { x: bounds.x, y: end.y }, end],
+		[start, { x: bounds.x + bounds.w, y: start.y }, { x: bounds.x + bounds.w, y: end.y }, end],
 	];
-	const bottom = [
-		start,
-		{ x: start.x, y: bounds.y + bounds.h },
-		{ x: end.x, y: bounds.y + bounds.h },
-		end,
-	];
-	const left = [
-		start,
-		{ x: bounds.x, y: start.y },
-		{ x: bounds.x, y: end.y },
-		end,
-	];
-	const right = [
-		start,
-		{ x: bounds.x + bounds.w, y: start.y },
-		{ x: bounds.x + bounds.w, y: end.y },
-		end,
-	];
-	return [top, bottom, left, right].sort((a, b) => pathLength(a) - pathLength(b))[0];
+	const clear = candidates.filter((path) => !pathCrossesReserved(path, reserved));
+	const pool = clear.length ? clear : candidates;
+	return pool.sort((a, b) => pathLength(a) - pathLength(b))[0];
 }
 
 const SIDES: Side[] = ['right', 'left', 'bottom', 'top'];
 
-function routeEdge(from: Box, to: Box, obstacles: Box[], bounds: Box): Point[] {
+function routeEdge(
+	from: Box,
+	to: Box,
+	obstacles: Box[],
+	bounds: Box,
+	reserved: Segment[] = [],
+	preferred?: { fromSide: Side; toSide: Side; fromPoint: Point; toPoint: Point },
+): Point[] {
 	const inflated = obstacles.map((box) => inflate(box, CLEARANCE));
-	const preferred: [Side, Side][] = [
-		[facingSide(from, to), facingSide(to, from)],
-		[facingSide(from, to), opposite(facingSide(from, to))],
-		[opposite(facingSide(to, from)), facingSide(to, from)],
-	];
-	const pairs: [Side, Side][] = [];
+	type Pair = { fromSide: Side; toSide: Side; fromPoint: Point; toPoint: Point };
+	const preferredPairs: Pair[] = [];
+	if (preferred) preferredPairs.push(preferred);
+	const facing: Pair = {
+		fromSide: facingSide(from, to),
+		toSide: facingSide(to, from),
+		fromPoint: port(from, facingSide(from, to)),
+		toPoint: port(to, facingSide(to, from)),
+	};
+	preferredPairs.push(facing);
+	preferredPairs.push({
+		fromSide: facing.fromSide,
+		toSide: opposite(facing.fromSide),
+		fromPoint: port(from, facing.fromSide),
+		toPoint: port(to, opposite(facing.fromSide)),
+	});
+	preferredPairs.push({
+		fromSide: opposite(facing.toSide),
+		toSide: facing.toSide,
+		fromPoint: port(from, opposite(facing.toSide)),
+		toPoint: port(to, facing.toSide),
+	});
+
+	const pairs: Pair[] = [];
 	const seen = new Set<string>();
-	for (const pair of [...preferred, ...SIDES.flatMap((a) => SIDES.map((b) => [a, b] as [Side, Side]))]) {
-		const key = `${pair[0]}-${pair[1]}`;
+	const extras = SIDES.flatMap((fromSide) =>
+		SIDES.flatMap((toSide) =>
+			portsAlong(from, fromSide, 3).flatMap((fromPoint) =>
+				portsAlong(to, toSide, 3).map((toPoint) => ({ fromSide, toSide, fromPoint, toPoint })),
+			),
+		),
+	);
+	for (const pair of [...preferredPairs, ...extras]) {
+		const key = `${pair.fromSide}-${pair.toSide}-${pair.fromPoint.x},${pair.fromPoint.y}-${pair.toPoint.x},${pair.toPoint.y}`;
 		if (seen.has(key)) continue;
 		seen.add(key);
 		pairs.push(pair);
@@ -705,29 +981,33 @@ function routeEdge(from: Box, to: Box, obstacles: Box[], bounds: Box): Point[] {
 	let bestScore = Infinity;
 
 	for (let pairIndex = 0; pairIndex < pairs.length; pairIndex++) {
-		const [fromSide, toSide] = pairs[pairIndex];
-		const start = outward(from, fromSide, CLEARANCE);
-		const end = outward(to, toSide, CLEARANCE);
-		let mid = tryLPath(start, end, inflated);
-		if (!mid) mid = gridPath(start, end, inflated, bounds);
+		const pair = pairs[pairIndex];
+		const start = outwardFrom(pair.fromPoint, pair.fromSide, CLEARANCE);
+		const end = outwardFrom(pair.toPoint, pair.toSide, CLEARANCE);
+		let mid = tryLPath(start, end, inflated, reserved);
+		if (!mid) mid = gridPath(start, end, inflated, bounds, reserved);
 		if (!mid) continue;
-		const path = simplifyPath([port(from, fromSide), ...mid, port(to, toSide)]);
+		const path = simplifyPath([pair.fromPoint, ...mid, pair.toPoint]);
+		if (pathCrossesReserved(path, reserved)) continue;
 		const bends = Math.max(0, path.length - 2);
 		const score = bends * 1000 + pathLength(path) + pairIndex * 0.01;
 		if (score < bestScore) {
 			best = path;
 			bestScore = score;
 		}
+		if (pairIndex === preferredPairs.length - 1 && best) break;
 	}
 
 	if (best) return best;
 
-	const fromSide = facingSide(from, to);
-	const toSide = facingSide(to, from);
+	const fromSide = preferred?.fromSide ?? facingSide(from, to);
+	const toSide = preferred?.toSide ?? facingSide(to, from);
+	const fromPoint = preferred?.fromPoint ?? port(from, fromSide);
+	const toPoint = preferred?.toPoint ?? port(to, toSide);
 	return simplifyPath([
-		port(from, fromSide),
-		...aroundBounds(outward(from, fromSide, CLEARANCE), outward(to, toSide, CLEARANCE), bounds),
-		port(to, toSide),
+		fromPoint,
+		...aroundBounds(outwardFrom(fromPoint, fromSide, CLEARANCE), outwardFrom(toPoint, toSide, CLEARANCE), bounds, reserved),
+		toPoint,
 	]);
 }
 
@@ -784,14 +1064,38 @@ function layoutAndRoute(source: string): {
 		w: laid.width + ROUTE_MARGIN * 2,
 		h: laid.height + ROUTE_MARGIN * 2,
 	};
-	const routes: { edge: EdgeDef; points: Point[] }[] = [];
-	for (const edge of parsed.edges) {
-		const from = laid.boxes.get(edge.from);
-		const to = laid.boxes.get(edge.to);
-		if (!from || !to) continue;
-		const obstacles = [...laid.boxes.values(), ...titleBoxes];
-		routes.push({ edge, points: routeEdge(from, to, obstacles, bounds) });
+	const obstacles = [...laid.boxes.values(), ...titleBoxes];
+	const routable = parsed.edges.filter((edge) => laid.boxes.has(edge.from) && laid.boxes.has(edge.to));
+	const ports = assignEdgePorts(routable, laid.boxes);
+	const ordered = [...routable].sort((a, b) => {
+		if (a.dashed !== b.dashed) return a.dashed ? 1 : -1;
+		const aFrom = laid.boxes.get(a.from)!;
+		const aTo = laid.boxes.get(a.to)!;
+		const bFrom = laid.boxes.get(b.from)!;
+		const bTo = laid.boxes.get(b.to)!;
+		const aDist =
+			Math.abs(aFrom.x + aFrom.w / 2 - (aTo.x + aTo.w / 2)) +
+			Math.abs(aFrom.y + aFrom.h / 2 - (aTo.y + aTo.h / 2));
+		const bDist =
+			Math.abs(bFrom.x + bFrom.w / 2 - (bTo.x + bTo.w / 2)) +
+			Math.abs(bFrom.y + bFrom.h / 2 - (bTo.y + bTo.h / 2));
+		return aDist - bDist;
+	});
+
+	const reserved: Segment[] = [];
+	const routed = new Map<EdgeDef, Point[]>();
+	for (const edge of ordered) {
+		const from = laid.boxes.get(edge.from)!;
+		const to = laid.boxes.get(edge.to)!;
+		const points = routeEdge(from, to, obstacles, bounds, reserved, ports.get(edge));
+		routed.set(edge, points);
+		reserved.push(...pathSegments(points, edge.dashed));
 	}
+
+	const routes: { edge: EdgeDef; points: Point[] }[] = routable.map((edge) => ({
+		edge,
+		points: routed.get(edge)!,
+	}));
 
 	return { parsed, laid, titleBoxes, routes };
 }
