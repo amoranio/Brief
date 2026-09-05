@@ -2,6 +2,12 @@
 title: Verified Agent Containment
 date: 2026-09-05
 dek: A control pattern for security architects and platform teams who run coding agents or MCP-backed tools on shared hosts. It replaces the comfort label “sandbox on” with an explicit, checkable isolation boundary so the agent cannot silently inherit the estate’s network paths and cloud identity.
+tags:
+  - agents
+  - sandbox
+  - credentials
+  - threat-model
+  - network
 relatedPost: sandbox-on-is-not-containment
 sources:
   - https://docs.warp.dev/platform/self-hosting/security-and-networking/
