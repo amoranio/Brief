@@ -1,26 +1,17 @@
 ---
 import Base from '../../layouts/Base.astro';
-import { getPatterns, isoDate } from '../../lib/collection';
-import { formatDate } from '../../lib/dates';
+import Feed from '../../components/Feed.astro';
+import { asTaggedPattern, getPatterns } from '../../lib/collection';
 
 const patterns = await getPatterns();
 ---
 
 <Base title="Patterns · Brief" description="Architecture patterns from Brief.">
+	<p class="kicker">Collection</p>
 	<h1>Patterns</h1>
-	<ol class="posts">
-		{
-			patterns.map((pattern) => (
-				<li>
-					<a href={`/patterns/${pattern.id}/`}>
-						<div class="date">
-							<time datetime={isoDate(pattern.data.date)}>{formatDate(pattern.data.date)}</time>
-						</div>
-						<h2>{pattern.data.title}</h2>
-						<p class="dek">{pattern.data.dek}</p>
-					</a>
-				</li>
-			))
-		}
-	</ol>
+	<p class="dek">
+		Control patterns that sit beside the posts. Tagged patterns also appear on topic pages with
+		matching posts.
+	</p>
+	<Feed entries={patterns.map(asTaggedPattern)} />
 </Base>

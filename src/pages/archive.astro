@@ -1,0 +1,83 @@
+---
+import Base from '../layouts/Base.astro';
+import {
+	allTags,
+	asTaggedPattern,
+	asTaggedPost,
+	getPatterns,
+	getPosts,
+	isoDate,
+	taggedCatalog,
+} from '../lib/collection';
+import { formatShortDate } from '../lib/dates';
+
+const posts = await getPosts();
+const patterns = await getPatterns();
+const postEntries = posts.map(asTaggedPost);
+const patternEntries = patterns.map(asTaggedPattern);
+const catalog = taggedCatalog(posts, patterns);
+const tags = allTags(posts, patterns).map((tag) => ({
+	tag,
+	count: catalog.filter((entry) => entry.tags.includes(tag)).length,
+}));
+---
+
+<Base title="Archive · Brief" description="Every Brief post, pattern, and tag.">
+	<p class="kicker">Index</p>
+	<h1>Archive</h1>
+
+	<div class="section-head">
+		<h2>Posts</h2>
+		<a href="/">Home</a>
+	</div>
+	<ol class="archive-list">
+		{
+			postEntries.map((entry) => (
+				<li>
+					<a href={entry.href}>
+						<span class="archive-title">{entry.title}</span>
+						<time class="feed-date" datetime={isoDate(entry.date)}>
+							{formatShortDate(entry.date)}
+						</time>
+					</a>
+				</li>
+			))
+		}
+	</ol>
+
+	<div class="section-head">
+		<h2>Patterns</h2>
+		<a href="/patterns/">All patterns</a>
+	</div>
+	<ol class="archive-list">
+		{
+			patternEntries.map((entry) => (
+				<li>
+					<a href={entry.href}>
+						<span class="archive-title">{entry.title}</span>
+						<time class="feed-date" datetime={isoDate(entry.date)}>
+							{formatShortDate(entry.date)}
+						</time>
+					</a>
+				</li>
+			))
+		}
+	</ol>
+
+	<div class="section-head">
+		<h2>Tags</h2>
+		<a href="/tags/">All tags</a>
+	</div>
+	<ul class="tag-index">
+		{
+			tags.map(({ tag, count }) => (
+				<li>
+					<a href={`/tags/${tag}/`}>
+						<span class="archive-title">{tag}</span>
+						<span class="tag-count">{count}</span>
+					</a>
+				</li>
+			))
+		}
+	</ul>
+</Base>

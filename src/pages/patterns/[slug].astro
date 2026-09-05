@@ -34,6 +34,17 @@ const relatedTitle = relatedPost?.data.title ?? relatedSlug;
 		</div>
 		<h1>{pattern.data.title}</h1>
 		<p class="dek">{pattern.data.dek}</p>
+		{
+			pattern.data.tags.length > 0 && (
+				<ul class="tags">
+					{pattern.data.tags.map((tag) => (
+						<li>
+							<a href={`/tags/${tag}/`}>{tag}</a>
+						</li>
+					))}
+				</ul>
+			)
+		}
 		<div class="body">
 			<Content />
 			{

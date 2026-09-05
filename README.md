@@ -25,17 +25,26 @@ sources:
 Body in Markdown.
 ```
 
-`title`, `date`, `dek`, and `tags` are required. Tags are single words or kebab-case (`threat-model`). Each tag is listed at `/tags/{tag}/`. `sources` is an optional list of URLs, shown after the body.
+`title`, `date`, `dek`, and `tags` are required. Tags are single words or kebab-case (`threat-model`). Each tag is listed at `/tags/{tag}/` and includes matching patterns. `sources` is an optional list of URLs, shown after the body.
 
 When a post explains a control, include a Mermaid `flowchart` in the Markdown. Diagrams compile to inline SVG at build time. Add `%% caption: …` so the SVG has an accessible name.
 
 Then `npm run build` to confirm the site builds. A push or merge to `main` publishes it.
 
-## Index and sitemap
+## Patterns
 
-The left index lists every post, every tag, About, and RSS. On a wide screen it sits in the margin and can be hidden. On a small screen it is a slide-over from an Index tab.
+Patterns live in `src/content/patterns/` and are listed at `/patterns/`. They use the same tag vocabulary as posts. `tags` is optional until a pattern is classified; once tags exist, that pattern appears on `/tags/` and each `/tags/{tag}/` page beside the posts.
 
-`/sitemap.xml` covers home, About, posts, and tag pages.
+## Index, theme, and sitemap
+
+The masthead is a single bar: **brief** on the left, **patterns / archive / tags / about** on the right, plus a theme toggle. There is no persistent index rail.
+
+- Home is the post feed.
+- `/archive/` lists every post and pattern.
+- `/tags/` lists every tag used by posts or patterns.
+- Theme follows `prefers-color-scheme` on first visit. The toggle writes `brief-theme` to `localStorage` and then wins.
+
+`/sitemap.xml` covers home, About, Archive, Tags, posts, patterns, and tag pages.
 
 ## Commands
 

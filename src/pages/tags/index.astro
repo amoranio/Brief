@@ -1,0 +1,40 @@
+---
+import Base from '../../layouts/Base.astro';
+import { allTags, getPatterns, getPosts, taggedCatalog } from '../../lib/collection';
+
+const posts = await getPosts();
+const patterns = await getPatterns();
+const catalog = taggedCatalog(posts, patterns);
+const tags = allTags(posts, patterns).map((tag) => ({
+	tag,
+	count: catalog.filter((entry) => entry.tags.includes(tag)).length,
+	patterns: catalog.filter((entry) => entry.kind === 'pattern' && entry.tags.includes(tag)).length,
+	posts: catalog.filter((entry) => entry.kind === 'post' && entry.tags.includes(tag)).length,
+}));
+---
+
+<Base title="Tags · Brief" description="Topics across Brief posts and architecture patterns.">
+	<p class="kicker">Index</p>
+	<h1>Tags</h1>
+	<p class="dek">
+		One list for posts and patterns. Filter a topic to see every matching entry from both
+		collections.
+	</p>
+	<ul class="tag-index">
+		{
+			tags.map(({ tag, count, posts: postCount, patterns: patternCount }) => (
+				<li>
+					<a href={`/tags/${tag}/`}>
+						<span class="archive-title">{tag}</span>
+						<span class="tag-count">
+							{count}
+							{patternCount > 0
+								? ` · ${postCount} post${postCount === 1 ? '' : 's'} · ${patternCount} pattern${patternCount === 1 ? '' : 's'}`
+								: ''}
+						</span>
+					</a>
+				</li>
+			))
+		}
+	</ul>
+</Base>

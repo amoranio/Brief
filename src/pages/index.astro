@@ -1,25 +1,23 @@
 ---
 import Base from '../layouts/Base.astro';
-import { getPosts, isoDate } from '../lib/collection';
+import Feed from '../components/Feed.astro';
+import { asTaggedPost, getPosts, isoDate } from '../lib/collection';
 import { formatDate } from '../lib/dates';
 
 const posts = await getPosts();
+const latest = posts[0];
 ---
 
 <Base title="Brief" description="A short publication on AI security architecture and risk.">
-	<ol class="posts">
+	<section class="hero">
+		<h1>Where authority sits, and how it fails.</h1>
 		{
-			posts.map((post) => (
-				<li>
-					<a href={`/${post.id}/`}>
-						<div class="date">
-							<time datetime={isoDate(post.data.date)}>{formatDate(post.data.date)}</time>
-						</div>
-						<h2>{post.data.title}</h2>
-						<p class="dek">{post.data.dek}</p>
-					</a>
-				</li>
-			))
+			latest && (
+				<p class="date">
+					<time datetime={isoDate(latest.data.date)}>{formatDate(latest.data.date)}</time>
+				</p>
+			)
 		}
-	</ol>
+	</section>
+	<Feed entries={posts.map(asTaggedPost)} />
 </Base>

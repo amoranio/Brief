@@ -5,12 +5,14 @@ export async function GET(context: APIContext) {
 	const site = context.site!;
 	const posts = await getPosts();
 	const patterns = await getPatterns();
-	const tags = allTags(posts);
+	const tags = allTags(posts, patterns);
 
 	const urls: { path: string; lastmod?: string }[] = [
 		{ path: '' },
 		{ path: 'about/' },
+		{ path: 'archive/' },
 		{ path: 'patterns/' },
+		{ path: 'tags/' },
 		...posts.map((post) => ({
 			path: `${post.id}/`,
 			lastmod: isoDate(post.data.date),

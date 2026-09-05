@@ -23,6 +23,7 @@ const patterns = defineCollection({
 		title: z.string(),
 		date: z.coerce.date(),
 		dek: z.string(),
+		tags: z.array(tag).default([]),
 		relatedPost: z.string().min(1).optional(),
 		sources: z.array(z.string().url()).default([]),
 	}),

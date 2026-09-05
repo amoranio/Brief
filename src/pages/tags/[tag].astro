@@ -1,12 +1,13 @@
 ---
 import { getCollection } from 'astro:content';
 import Base from '../../layouts/Base.astro';
-import { allTags, getPosts, isoDate, postsWithTag } from '../../lib/collection';
-import { formatDate } from '../../lib/dates';
+import Feed from '../../components/Feed.astro';
+import { allTags, entriesWithTag, getPatterns, getPosts, taggedCatalog } from '../../lib/collection';
 
 export async function getStaticPaths() {
 	const posts = await getCollection('posts');
-	return allTags(posts).map((tag) => ({
+	const patterns = await getCollection('patterns');
+	return allTags(posts, patterns).map((tag) => ({
 		params: { tag },
 		props: { tag },
 	}));
@@ -17,25 +18,16 @@ interface Props {
 }
 
 const { tag } = Astro.props;
-const posts = postsWithTag(await getPosts(), tag);
+const entries = entriesWithTag(taggedCatalog(await getPosts(), await getPatterns()), tag);
+const patternCount = entries.filter((entry) => entry.kind === 'pattern').length;
 ---
 
-<Base title={`${tag} · Brief`} description={`Posts tagged ${tag}.`}>
-	<p class="date">Tag</p>
+<Base title={`${tag} · Brief`} description={`Posts and patterns tagged ${tag}.`}>
+	<p class="kicker">Tag</p>
 	<h1>{tag}</h1>
-	<ol class="posts">
-		{
-			posts.map((post) => (
-				<li>
-					<a href={`/${post.id}/`}>
-						<div class="date">
-							<time datetime={isoDate(post.data.date)}>{formatDate(post.data.date)}</time>
-						</div>
-						<h2>{post.data.title}</h2>
-						<p class="dek">{post.data.dek}</p>
-					</a>
-				</li>
-			))
-		}
-	</ol>
+	<p class="dek">
+		{entries.length} {entries.length === 1 ? 'entry' : 'entries'}
+		{patternCount > 0 ? `, including ${patternCount} pattern${patternCount === 1 ? '' : 's'}` : ''}.
+	</p>
+	<Feed entries={entries} showKind />
 </Base>
