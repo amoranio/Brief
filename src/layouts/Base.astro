@@ -42,7 +42,15 @@ function current(href: string, prefix = false): boolean {
 		<a class="skip" href="#main">Skip to content</a>
 		<div class="page">
 			<header class="masthead">
-				<a class="wordmark" href="/" aria-current={current('/') ? 'page' : undefined}>brief</a>
+				<a
+					class="wordmark"
+					href="/"
+					aria-label="Brief"
+					aria-current={current('/') ? 'page' : undefined}
+				>
+					<span class="wordmark-rule" aria-hidden="true"></span>
+					<span class="wordmark-text">Brief.</span>
+				</a>
 				<nav id="site-nav" class="site-nav" aria-label="Site">
 					<a href="/patterns/" aria-current={current('/patterns/', true) ? 'page' : undefined}>
 						patterns
