@@ -21,20 +21,14 @@ HiddenLayer showed the co-opt path on 10 October 2025. OpenAI Guardrails’ Jail
 The Cloud Security Alliance research note of 6 August 2026 describes the skip path. CoreBreak, presented by Stealth at Black Hat USA 2026, forged tool-call payloads and human-in-the-loop confirmations in message history so the harness dispatched tools without ever invoking the model. The pattern covers Amazon Bedrock AgentCore, Google’s Agent Development Kit, and Vercel AI SDK harness packages. Vendors assigned CVEs; the architecture residual is what matters here. The harness trusted payloads shaped like model tool calls without proving a real model turn. Every model-layer guardrail — system prompt, content filter, refusal training, LLM judge — never runs, because there is no model decision left to judge.
 
 ```mermaid
-%% caption: Top corridor is model then guardrail then dispatch; bottom corridor is forged payload straight to dispatch — no model turn, no judge
+%% caption: Top path is model then judge then dispatch; bottom is forged payload straight to dispatch
 flowchart TD
-  subgraph expected [Expected path]
-    direction LR
-    req[User request] --> model[Model turn]
-    model --> guard[Guardrail judge]
-    guard --> d1[Tool dispatch]
-    d1 --> t1[Tool runs]
-  end
-  subgraph bypass [Bypass path]
-    direction LR
-    forged[Forged tool-call or confirm] --> d2[Tool dispatch]
-    d2 --> t2[Tool runs]
-  end
+  req[User request] --> model[Model turn]
+  model --> guard[Guardrail judge]
+  guard --> d1[Tool dispatch]
+  d1 --> t1[Tool runs]
+  forged[Forged tool-call or confirm] --> d2[Tool dispatch]
+  d2 --> t2[Tool runs]
 ```
 
 The residual is architectural, not a patch list. Teams treat prompt filters and LLM judges as containment. Tool dispatch still trusts shaped payloads and session history the agent — or the attacker — can author. A green guardrail on the model path cannot catch a call that never took that path. It also cannot catch a judge the attacker taught to score under the threshold.
