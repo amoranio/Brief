@@ -1,6 +1,6 @@
 ---
 title: The guardrail that waved traffic through
-date: 2026-09-07
+date: 2026-09-06
 dek: A green guardrail means nothing if enforcement sits on the model path the attacker can skip or co-opt.
 tags:
   - guardrails
