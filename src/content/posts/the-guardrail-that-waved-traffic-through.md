@@ -38,3 +38,5 @@ flowchart TD
 - Reject forged human confirms that do not match the recorded call.
 - Alert on tool runs with no matching completion.
 - Put any LLM judge on a different model class than the one it scores.
+
+Related pattern: [Verified Dispatch Path](/patterns/verified-dispatch-path/).
