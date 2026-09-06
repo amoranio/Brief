@@ -175,6 +175,7 @@ function parseMermaid(source: string): {
 			continue;
 		}
 
+		if (/^direction\s+(LR|RL|TD|TB|BT)$/i.test(statement)) continue;
 		if (/^(classDef|class|style|linkStyle|click)\b/i.test(statement)) continue;
 
 		const current = stack.at(-1);
