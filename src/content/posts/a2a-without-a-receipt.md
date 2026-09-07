@@ -42,3 +42,5 @@ Identity without a receipt is a signed shrug.
 - Log who decided, which skill, which principal, and which hop together.
 - Deny skill calls that arrive with identity alone and no grant artifact.
 - Prefer per-agent attested identity (SPIFFE-class) over shared service accounts for the identity half of the check.
+
+Related pattern: [Skill Grant on the Hop](/patterns/skill-grant-on-the-hop/).
