@@ -44,7 +44,6 @@ An authenticated hop can be secure and still be unauditable.
 - Emit the receipt from the policy decision point, not from caller-supplied metadata.
 - Record the actor and represented user, skill, action, resource, task or context ID, policy version, outcome, timestamp and request digest.
 - Store credential identifiers or hashes, never reusable credentials or raw tokens.
-- Bind the receipt to dispatch and fail closed if an allowed decision cannot be recorded.
-- Keep receipts append-only and correlate them across retries and downstream hops.
+- Bind the receipt to dispatch, store it append-only, correlate it across retries and downstream hops, and fail closed if an allowed decision cannot be recorded.
 
 Related pattern: [Skill Grant on the Hop](/patterns/skill-grant-on-the-hop/).
