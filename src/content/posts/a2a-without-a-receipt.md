@@ -1,7 +1,7 @@
 ---
 title: A2A without a receipt
 date: 2026-09-07
-dek: Authentication names the caller. Authorization opens the skill. A decision receipt proves why.
+dek: Authentication identifies the caller. Authorization permits the skill. A receipt preserves the decision.
 tags:
   - agents
   - governance
@@ -14,15 +14,15 @@ sources:
   - https://github.com/mitre-atlas/atlas-data/blob/main/data/techniques.yaml
 ---
 
-The hop authenticated. The skill ran. Incident response still cannot show why it was allowed.
+The caller authenticated. The skill ran. Incident response still cannot explain why the call was allowed.
 
-Identity, authorization and evidence are three different records. Google Cloud Agent Identity gives each agent a strongly attested SPIFFE ID and managed X.509 credentials. IAM can then grant that principal access. Neither feature, by itself, guarantees that the receiving agent records the exact skill-level decision it made for a particular call.
+Identity, authorization, and evidence answer three different questions. Google Cloud Agent Identity can give each agent a strongly attested SPIFFE ID and managed X.509 credentials. IAM can then grant that principal access. Neither feature proves that the receiving agent recorded the skill-level decision governing a specific call.
 
-A2A 1.0 is not silent on authorization. An Agent Card can declare security requirements for the agent and for individual skills. After authentication, the server is responsible for authorizing each request against its own policy. The protocol deliberately leaves that policy implementation-specific, however, and it does not prescribe a durable, per-call authorization record.
+A2A 1.0 does address authorization. An Agent Card can declare security requirements for the agent and individual skills, and the server must authorize every protocol-operation request. The protocol deliberately leaves the policy agent-defined, however, and does not require a durable record of each decision.
 
-That distinction matters during an AML.T0053 (AI Agent Tool Invocation) investigation. A valid SPIFFE identity answers who connected. An execution log shows that something ran. Neither tells a responder which policy version allowed which actor, skill, action and resource at that moment.
+That gap matters during an AML.T0053 (AI Agent Tool Invocation) investigation. A valid SPIFFE identity answers who connected. An execution log shows what ran. Neither tells a responder which policy version authorized that actor, skill, action, and resource combination.
 
-The missing object is an authorization decision receipt: a tamper-evident record emitted by the server-side policy decision, bound to the call that is about to run. It is evidence of enforcement, not a bearer credential and not a claim the caller gets to write.
+The missing object is an authorization decision receipt: a tamper-evident record emitted by the server-side policy decision point and bound to the call about to run. It is evidence of enforcement, not a bearer credential, and the caller must not be able to mint or alter it.
 
 ```mermaid
 %% caption: Top path records identity and execution but loses the authorization decision; bottom path binds a server-side decision receipt to the skill call before dispatch
@@ -36,14 +36,14 @@ flowchart TD
   r2 --> s2[Skill runs]
 ```
 
-An authenticated hop can be secure and still be unauditable.
+An authenticated hop can still leave its authorization decision unauditable.
 
 ## Recommendations
 
 - Enforce authorization at the receiving agent; treat Agent Card requirements as declarations, not proof that policy ran.
-- Emit the receipt from the policy decision point, not from caller-supplied metadata.
-- Record the actor and represented user, skill, action, resource, task or context ID, policy version, outcome, timestamp and request digest.
+- Emit receipts for allow and deny outcomes from the policy decision point, never from caller-supplied metadata.
+- Record the actor and represented user, skill, action, resource, task or context ID, policy version, outcome, timestamp, and request digest.
 - Store credential identifiers or hashes, never reusable credentials or raw tokens.
-- Bind the receipt to dispatch, store it append-only, correlate it across retries and downstream hops, and fail closed if an allowed decision cannot be recorded.
+- Require an unexpired allow receipt that matches the exact request before dispatch. Store receipts in a tamper-evident log, correlate them across retries and downstream hops, and require each receiving agent to issue its own. Fail closed if an allow decision cannot be recorded.
 
 Related pattern: [Skill Grant on the Hop](/patterns/skill-grant-on-the-hop/).
