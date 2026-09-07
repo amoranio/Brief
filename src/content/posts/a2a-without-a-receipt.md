@@ -1,46 +1,49 @@
 ---
 title: A2A without a receipt
 date: 2026-09-07
-dek: An authenticated A2A hop is not a receipt of authority.
+dek: Authentication names the caller. Authorization opens the skill. A decision receipt proves why.
 tags:
   - agents
   - governance
   - threat-model
   - identity
 sources:
+  - https://a2a-protocol.org/v1.0.0/specification/
   - https://docs.cloud.google.com/iam/docs/agent-identity-overview
   - https://zitadel.com/blog/ai-agent-impersonation
-  - https://dev.to/kanywst/a2a-protocol-auth-taken-apart-why-the-spec-is-thin-and-where-that-leaves-holes-22ii
+  - https://github.com/mitre-atlas/atlas-data/blob/main/data/techniques.yaml
 ---
 
-The hop authenticated. Nobody can say who authorized the skill.
+The hop authenticated. The skill ran. Incident response still cannot show why it was allowed.
 
-SPIFFE can prove which agent spoke. Google Cloud Agent Identity assigns each agent a strongly attested SPIFFE ID and short-lived X.509 credentials, then maps that principal into IAM. That is real identity on the wire. It is not a recorded grant that this caller may invoke that skill under that principal on this hop.
+Identity, authorization and evidence are three different records. Google Cloud Agent Identity gives each agent a strongly attested SPIFFE ID and managed X.509 credentials. IAM can then grant that principal access. Neither feature, by itself, guarantees that the receiving agent records the exact skill-level decision it made for a particular call.
 
-A2A makes the gap structural. The protocol tells agents how to advertise credentials in an Agent Card. It does not define an authorization framework for which peer may call which skill. ZITADEL’s agent-to-agent write-up states the split plainly: authenticate the agent, then separately authorize the specific skill. Skip the second check and you have a signed conversation with no recorded grant.
+A2A 1.0 is not silent on authorization. An Agent Card can declare security requirements for the agent and for individual skills. After authentication, the server is responsible for authorizing each request against its own policy. The protocol deliberately leaves that policy implementation-specific, however, and it does not prescribe a durable, per-call authorization record.
 
-MITRE ATLAS maps the hop as AML.T0053 (AI Agent Tool Invocation): an authenticated peer invokes a skill across the A2A boundary. For IR, SPIFFE answers who spoke. Without a skill-scoped grant record on that hop, you still cannot answer who authorized that skill, for which principal, at that moment. The decision chain breaks in the timeline.
+That distinction matters during an AML.T0053 (AI Agent Tool Invocation) investigation. A valid SPIFFE identity answers who connected. An execution log shows that something ran. Neither tells a responder which policy version allowed which actor, skill, action and resource at that moment.
+
+The missing object is an authorization decision receipt: a tamper-evident record emitted by the server-side policy decision, bound to the call that is about to run. It is evidence of enforcement, not a bearer credential and not a claim the caller gets to write.
 
 ```mermaid
-%% caption: Top path is identity only then skill; bottom path records a skill grant on the hop first
+%% caption: Top path records identity and execution but loses the authorization decision; bottom path binds a server-side decision receipt to the skill call before dispatch
 flowchart TD
-  a1[Caller] --> h1[A2A hop]
-  h1 --> i1[SPIFFE who]
+  a1[Caller] --> i1[Identity verified]
   i1 --> s1[Skill runs]
-  a2[Caller] --> h2[A2A hop]
-  h2 --> i2[SPIFFE who]
-  i2 --> g2[Skill grant recorded]
-  g2 --> s2[Skill runs]
+  s1 --> l1[Identity plus success logged]
+  a2[Caller] --> i2[Identity verified]
+  i2 --> p2[Skill policy evaluated]
+  p2 --> r2[Decision receipt bound to call]
+  r2 --> s2[Skill runs]
 ```
 
-Identity without a receipt is a signed shrug.
+An authenticated hop can be secure and still be unauditable.
 
 ## Recommendations
 
-- Require a skill-scoped grant record on every A2A hop before the skill runs.
-- Treat SPIFFE or Agent Card auth as identity proof, not authorization.
-- Log who decided, which skill, which principal, and which hop together.
-- Deny skill calls that arrive with identity alone and no grant artifact.
-- Prefer per-agent attested identity (SPIFFE-class) over shared service accounts for the identity half of the check.
+- Enforce authorization at the receiving agent; treat Agent Card requirements as declarations, not proof that policy ran.
+- Emit the receipt from the policy decision point, not from caller-supplied metadata.
+- Record the actor and represented user, skill, action, resource, task or context ID, policy version, outcome, timestamp and request digest.
+- Store credential identifiers or hashes, never reusable credentials or raw tokens.
+- Bind the receipt to dispatch, store it append-only, correlate it across retries and downstream hops, and fail closed if an allowed decision cannot be recorded.
 
 Related pattern: [Skill Grant on the Hop](/patterns/skill-grant-on-the-hop/).
