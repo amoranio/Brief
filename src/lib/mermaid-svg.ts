@@ -51,8 +51,8 @@ const FONT_SIZE = 13;
 const PAD_X = 14;
 const PAD_Y = 10;
 const MIN_W = 72;
-const RANK_GAP = 54;
-const NODE_GAP = 26;
+const RANK_GAP = 80;
+const NODE_GAP = 180;
 const CLUSTER_PAD = 18;
 const CLUSTER_TITLE = 20;
 const CLUSTER_GAP = 32;
@@ -920,18 +920,6 @@ function gridPath(
 	return null;
 }
 
-function aroundBounds(start: Point, end: Point, bounds: Box, reserved: Segment[] = []): Point[] {
-	const candidates = [
-		[start, { x: start.x, y: bounds.y }, { x: end.x, y: bounds.y }, end],
-		[start, { x: start.x, y: bounds.y + bounds.h }, { x: end.x, y: bounds.y + bounds.h }, end],
-		[start, { x: bounds.x, y: start.y }, { x: bounds.x, y: end.y }, end],
-		[start, { x: bounds.x + bounds.w, y: start.y }, { x: bounds.x + bounds.w, y: end.y }, end],
-	];
-	const clear = candidates.filter((path) => !pathCrossesReserved(path, reserved));
-	const pool = clear.length ? clear : candidates;
-	return pool.sort((a, b) => pathLength(a) - pathLength(b))[0];
-}
-
 const SIDES: Side[] = ['right', 'left', 'bottom', 'top'];
 
 function routeEdge(
@@ -994,6 +982,8 @@ function routeEdge(
 		if (!mid) continue;
 		const path = simplifyPath([pair.fromPoint, ...mid, pair.toPoint]);
 		if (pathCrossesReserved(path, reserved)) continue;
+		if (pathSegments(path).some((seg) => obstacles.some((box) =>
+			segmentHitsBox(seg.x1, seg.y1, seg.x2, seg.y2, box)))) continue;
 		const bends = Math.max(0, path.length - 2);
 		const score = bends * 1000 + pathLength(path) + pairIndex * 0.01;
 		if (score < bestScore) {
@@ -1005,40 +995,42 @@ function routeEdge(
 
 	if (best) return best;
 
-	const fromSide = preferred?.fromSide ?? facingSide(from, to);
-	const toSide = preferred?.toSide ?? facingSide(to, from);
-	const fromPoint = preferred?.fromPoint ?? port(from, fromSide);
-	const toPoint = preferred?.toPoint ?? port(to, toSide);
-	return simplifyPath([
-		fromPoint,
-		...aroundBounds(outwardFrom(fromPoint, fromSide, CLEARANCE), outwardFrom(toPoint, toSide, CLEARANCE), bounds, reserved),
-		toPoint,
-	]);
+	throw new Error('Cannot route diagram without overlaps; simplify or rearrange the diagram.');
 }
 
-function longestMidpoint(points: Point[]): { x: number; y: number; horizontal: boolean } {
-	let best = 0;
-	let from = points[0];
-	let to = points.at(-1) ?? points[0];
-	for (let i = 1; i < points.length; i++) {
-		const length = Math.abs(points[i].x - points[i - 1].x) + Math.abs(points[i].y - points[i - 1].y);
-		if (length > best) {
-			best = length;
-			from = points[i - 1];
-			to = points[i];
+function placeLabels(routes: { edge: EdgeDef; points: Point[] }[], obstacles: Box[]): Map<EdgeDef, Box> {
+	const labels = new Map<EdgeDef, Box>();
+	const segments = routes.flatMap((route) => pathSegments(route.points));
+	for (const route of routes) {
+		if (!route.edge.label) continue;
+		const w = textWidth(route.edge.label) + 4;
+		const h = 17;
+		const candidates: Box[] = [];
+		for (const seg of pathSegments(route.points)) {
+			for (const t of [0.5, 0.25, 0.75]) {
+				const x = seg.x1 + (seg.x2 - seg.x1) * t;
+				const y = seg.y1 + (seg.y2 - seg.y1) * t;
+				if (seg.y1 === seg.y2) {
+					candidates.push({ x: x - w / 2, y: y - h - 5, w, h }, { x: x - w / 2, y: y + 5, w, h });
+				} else {
+					candidates.push({ x: x + 8, y: y - h / 2, w, h }, { x: x - w - 8, y: y - h / 2, w, h });
+				}
+			}
 		}
+		const box = candidates.find((candidate) =>
+			![...obstacles, ...labels.values()].some((other) => boxesOverlap(candidate, other, 3)) &&
+			!segments.some((seg) => segmentHitsBox(seg.x1, seg.y1, seg.x2, seg.y2, inflate(candidate, 3))));
+		if (!box) throw new Error(`Cannot place diagram label "${route.edge.label}" without overlaps; simplify the diagram.`);
+		labels.set(route.edge, box);
 	}
-	return {
-		x: (from.x + to.x) / 2,
-		y: (from.y + to.y) / 2,
-		horizontal: from.y === to.y,
-	};
+	return labels;
 }
 
 export interface MermaidInspect {
 	caption: string;
 	nodeBoxes: Box[];
 	titleBoxes: Box[];
+	labelBoxes: Box[];
 	segments: Segment[];
 	svg: string;
 }
@@ -1107,6 +1099,7 @@ function layoutAndRoute(source: string): {
 
 export function inspectMermaidDiagram(source: string): MermaidInspect {
 	const { parsed, laid, titleBoxes, routes } = layoutAndRoute(source);
+	const labels = placeLabels(routes, [...laid.boxes.values(), ...titleBoxes]);
 
 	let minX = 0;
 	let minY = 0;
@@ -1118,7 +1111,7 @@ export function inspectMermaidDiagram(source: string): MermaidInspect {
 		maxX = Math.max(maxX, cluster.box.x + cluster.box.w);
 		maxY = Math.max(maxY, cluster.box.y + cluster.box.h);
 	}
-	for (const box of laid.boxes.values()) {
+	for (const box of [...laid.boxes.values(), ...labels.values()]) {
 		minX = Math.min(minX, box.x);
 		minY = Math.min(minY, box.y);
 		maxX = Math.max(maxX, box.x + box.w);
@@ -1169,14 +1162,9 @@ export function inspectMermaidDiagram(source: string): MermaidInspect {
 		parts.push(
 			`<polyline points="${pointAttr}" fill="none" stroke="${STROKE}" stroke-width="1.05"${dash} marker-end="url(#${id}-arrow)"/>`,
 		);
-		if (route.edge.label) {
-			const mid = longestMidpoint(points);
-			const x = mid.horizontal ? mid.x : mid.x + 8;
-			const y = mid.horizontal ? mid.y - 7 : mid.y;
-			const anchor = mid.horizontal ? 'middle' : 'start';
-			parts.push(
-				`<text x="${fmt(x)}" y="${fmt(y)}" text-anchor="${anchor}" fill="${MUTED}" font-family="${FONT}" font-size="11">${escapeXml(route.edge.label)}</text>`,
-			);
+		const label = labels.get(route.edge);
+		if (label) {
+			parts.push(`<text x="${fmt(label.x + ox + 2)}" y="${fmt(label.y + oy + 12)}" fill="${MUTED}" font-family="${FONT}" font-size="11">${escapeXml(route.edge.label!)}</text>`);
 		}
 	}
 
@@ -1192,6 +1180,7 @@ export function inspectMermaidDiagram(source: string): MermaidInspect {
 		caption: parsed.caption,
 		nodeBoxes: [...laid.boxes.values()].map((box) => ({ ...box, x: box.x + ox, y: box.y + oy })),
 		titleBoxes: titleBoxes.map((box) => ({ ...box, x: box.x + ox, y: box.y + oy })),
+		labelBoxes: [...labels.values()].map((box) => ({ ...box, x: box.x + ox, y: box.y + oy })),
 		segments,
 		svg: parts.join(''),
 	};

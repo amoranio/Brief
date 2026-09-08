@@ -10,7 +10,8 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "test": "node --experimental-strip-types --disable-warning=ExperimentalWarning scripts/check-diagrams.ts"
+    "test": "node --experimental-strip-types --disable-warning=ExperimentalWarning scripts/check-diagrams.ts",
+    "prebuild": "npm test"
   },
   "dependencies": {
     "@astrojs/markdown-satteri": "^0.3.8",

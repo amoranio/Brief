@@ -40,7 +40,7 @@ function assertOrthogonal(source: string, label: string): void {
 		throw new Error(`${label}: missing stroke #111111`);
 	}
 
-	const boxes = [...inspected.nodeBoxes, ...inspected.titleBoxes];
+	const boxes = [...inspected.nodeBoxes, ...inspected.titleBoxes, ...inspected.labelBoxes];
 	if (inspected.segments.length === 0) {
 		throw new Error(`${label}: expected routed segments`);
 	}
@@ -160,6 +160,14 @@ for (const file of postFiles) {
 	const blocks = extractMermaid(markdown);
 	blocks.forEach((source, index) => {
 		const label = `${file}#${index + 1}`;
+		check(label, () => assertOrthogonal(source, label));
+	});
+}
+
+for (const file of readdirSync(join(root, 'src/content/patterns')).filter((file) => file.endsWith('.md'))) {
+	const markdown = readFileSync(join(root, 'src/content/patterns', file), 'utf8');
+	extractMermaid(markdown).forEach((source, index) => {
+		const label = `patterns/${file}#${index + 1}`;
 		check(label, () => assertOrthogonal(source, label));
 	});
 }
