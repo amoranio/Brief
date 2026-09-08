@@ -1,7 +1,7 @@
 ---
 title: A2A without a receipt
 date: 2026-09-07
-dek: Authentication names the caller. Authorization opens the skill. A decision receipt proves why.
+dek: An authenticated agent call still needs a record of the policy that allowed it.
 tags:
   - agents
   - governance
@@ -10,33 +10,29 @@ tags:
 sources:
   - https://a2a-protocol.org/v1.0.0/specification/
   - https://docs.cloud.google.com/iam/docs/agent-identity-overview
-  - https://zitadel.com/blog/ai-agent-impersonation
-  - https://github.com/mitre-atlas/atlas-data/blob/main/data/techniques.yaml
 ---
 
-The hop authenticated. The skill ran. Incident response still cannot show why it was allowed.
+The receiving agent authenticated the caller and ran the skill. When responders ask why the call was allowed, the logs show a principal and a success status. The authorization decision is missing.
 
-Identity, authorization and evidence are three different records. Google Cloud Agent Identity gives each agent a strongly attested SPIFFE ID and managed X.509 credentials. IAM can then grant that principal access. Neither feature, by itself, guarantees that the receiving agent records the exact skill-level decision it made for a particular call.
+Identity, authorization and audit evidence answer different questions. Google Cloud Agent Identity provides an agent with a SPIFFE-based cryptographic identity. That helps establish who connected; it does not, by itself, explain why a particular action against a particular resource was permitted.
 
-A2A 1.0 is not silent on authorization. An Agent Card can declare security requirements for the agent and for individual skills. After authentication, the server is responsible for authorizing each request against its own policy. The protocol deliberately leaves that policy implementation-specific, however, and it does not prescribe a durable, per-call authorization record.
+A2A 1.0 places authorization at the receiving server. Agent Cards can declare security requirements, including requirements for individual skills, but the server must enforce its own policy. A declaration in a card cannot demonstrate that the check happened for the call under investigation.
 
-That distinction matters during an AML.T0053 (AI Agent Tool Invocation) investigation. A valid SPIFFE identity answers who connected. An execution log shows that something ran. Neither tells a responder which policy version allowed which actor, skill, action and resource at that moment.
+Consider an agent that can read incidents and close them. Its identity is valid in both cases. To explain a closure, responders need the requested action, target incident, acting agent, represented user and policy decision. A generic “skill succeeded” event loses that distinction.
 
-The missing object is an authorization decision receipt: a tamper-evident record emitted by the server-side policy decision, bound to the call that is about to run. It is evidence of enforcement, not a bearer credential and not a claim the caller gets to write.
+The proposed control is an authorization decision receipt: a server-generated record linked to the exact request before dispatch. Record both allow and deny outcomes. For an allow, the dispatcher must verify the binding and expiry before running the skill. Caller-supplied metadata cannot grant permission.
 
 ```mermaid
-%% caption: Top path records identity and execution but loses the authorization decision; bottom path binds a server-side decision receipt to the skill call before dispatch
+%% caption: The receiving agent records its policy decision and permits dispatch only for a matching allow
 flowchart TD
-  a1[Caller] --> i1[Identity verified]
-  i1 --> s1[Skill runs]
-  s1 --> l1[Identity plus success logged]
-  a2[Caller] --> i2[Identity verified]
-  i2 --> p2[Skill policy evaluated]
-  p2 --> r2[Decision receipt bound to call]
-  r2 --> s2[Skill runs]
+  caller[Authenticated caller] --> policy[Evaluate action and resource]
+  policy --> record[Record decision]
+  record --> gate[Verify allow and request binding]
+  gate -->|Match| run[Dispatch skill]
+  gate -->|Deny or mismatch| stop[Stop]
 ```
 
-An authenticated hop can be secure and still be unauditable.
+This receipt is an architecture choice, not an A2A protocol requirement. It proves which decision governed execution; it cannot prove that the policy was sound or the caller uncompromised. Where existing authorization logs already provide that binding, use them.
 
 ## Recommendations
 
