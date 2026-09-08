@@ -1,7 +1,7 @@
 ---
 title: Verified Dispatch Path
 date: 2026-09-06
-dek: A control pattern for security architects and platform teams who run agent harnesses with model-layer guardrails. It treats a green dashboard as worthless unless tool dispatch requires a verified model turn — so forged history and co-opted judges cannot wave traffic through.
+dek: A control pattern for security architects and platform teams who run agent harnesses with model-layer guardrails. It treats a green dashboard as worthless unless tool dispatch requires a trusted execution record and an explicit policy decision — so forged history and co-opted judges cannot wave traffic through.
 tags:
   - guardrails
   - agents
@@ -21,11 +21,11 @@ Teams often put jailbreak and prompt-injection detectors on the model turn and r
 
 Put enforcement on a path that cannot be skipped or co-opted by the same failure mode it claims to stop.
 
-1. **Require a verified model turn before dispatch** — Tool runs need a matching completion from the model turn you trust, not only a line in chat history.
-2. **Bind tool arguments to that turn** — Arguments must hash or otherwise bind to the verified completion; replayed or edited payloads fail closed.
+1. **Require trusted provenance and authorization before dispatch** — Bind model-originated calls to recorded model output. Give scheduled and resumed work explicit server-controlled execution records. Authorise the action and resource on every route; a genuine model completion is not permission.
+2. **Bind tool arguments to that turn** — Arguments must hash or otherwise bind to the authorised execution record; replayed or edited payloads fail closed.
 3. **Reject forged human confirms** — HITL or confirm events must match the recorded call identity; unsigned or mismatched confirms never open dispatch.
-4. **Alert on orphan tool runs** — Tool execution with no matching verified completion is an incident signal, not a quiet success.
-5. **Separate the judge** — Any LLM judge uses a different model class than the model it scores, so one injection cannot silence both.
+4. **Alert on orphan tool runs** — Tool execution with no matching authorised execution record is an incident signal, not a quiet success.
+5. **Back the judge with independent enforcement** — Model diversity may reduce shared failure modes but does not prevent prompt injection. Enforce deterministic action and resource policy outside the model, and test the judge adversarially.
 
 ## Problems and considerations
 
@@ -36,4 +36,4 @@ Put enforcement on a path that cannot be skipped or co-opted by the same failure
 
 ## When to use this pattern
 
-Use this when agent tools can run from harness message history, when guardrails are LLM judges on the model path, or when stakeholders treat a green guardrail dashboard as proof the tool could not have fired unsafely. Skip it only for systems where every tool invocation is cryptographically bound to a verified model completion by design and forged history cannot reach the dispatcher.
+Use this when agent tools can run from harness message history, when guardrails are LLM judges on the model path, or when stakeholders treat a green guardrail dashboard as proof the tool could not have fired unsafely. Skip it only for systems where every tool invocation already has trusted provenance, independent authorization and request binding, and forged history cannot reach the dispatcher.
