@@ -8,34 +8,36 @@ tags:
   - agents
   - threat-model
 sources:
-  - https://www.ietf.org/archive/id/draft-sharif-agent-audit-trail-01.txt
-  - https://kotrov.com/guides/agent-logs-are-not-audit-logs/
+  - https://datatracker.ietf.org/doc/draft-sharif-agent-audit-trail/
+  - https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html
 ---
 
 The dashboard said success. Nobody can prove a gate ran.
 
-Token counts, latency charts, and HTTP 200s look like visibility. They are not an audit of the decision. An agent under attack often authenticates correctly, calls an allowed tool, and returns a fluent answer. Every conventional layer reports success because, by its own definition, success is what happened. The failure sits one level up, in the choice to make that call, and default observability rarely records the choice.
+Token counts, latency charts and HTTP 200s look like visibility. They are not an audit of the decision. An agent under attack can authenticate correctly, call an allowed tool and receive a successful response. Every conventional layer may report success because each is describing a different event.
 
-The IETF Agent Audit Trail draft (-01, 19 August 2026) names the evidentiary gap. A post-execution log can look complete while providing no evidence that a policy check ran before the action. Denials and escalations that are only written after the fact do not prove enforcement. Self-recording is weaker still: when the agent writes its own trail, it can omit or alter what responders later trust.
+The distinction is timing and meaning. A record written after a tool returns can describe an outcome. It cannot, by itself, show that an enforceable policy decision existed before dispatch. The current Agent Audit Trail Internet-Draft calls these separate pre-execution and post-execution phases. It is a work in progress, not an IETF standard, but the distinction is useful.
 
-Kotrov’s August 2026 guide shows how that looks in an incident. In the Supabase MCP theft through Cursor at General Analysis, the database, MCP server, and model provider each logged a permitted success. A SIEM ingesting those streams sees a developer doing development. The attack lives in the sequence and in the provenance of the instruction, which none of those success lines carry.
+Even a pre-execution record proves only that its recorder emitted a claim. If the agent can alter the recorder, choose the identity fields or rewrite storage, the trail inherits that weakness. Hash chaining can make later edits detectable; it cannot make an untrusted original statement true.
+
+OWASP's logging guidance makes the broader requirement clear: security analysis needs application context such as identity, permissions, target, action and outcome, plus an interaction identifier that links related events. For an agent action, that means correlating the policy decision, the dispatch attempt and the target's result without treating any one source as the whole truth.
 
 ```mermaid
-%% caption: Top path logs success after the tool runs; bottom path records the policy decision before execution
+%% caption: Separate records show what was approved, sent and observed at the target
 flowchart TD
-  call1[Tool call] --> run1[Action runs]
-  run1 --> log1[Success log]
-  call2[Tool call] --> gate2[Policy decision recorded]
-  gate2 --> run2[Action runs]
-  run2 --> log2[Outcome log]
+  request[Action request] --> decision[Policy decision]
+  decision --> dispatch[Dispatch attempt]
+  dispatch --> outcome[Target outcome]
 ```
 
-A green log that cannot prove a pre-execution decision is a comforting fiction.
+A green log is useful evidence. It is not a verdict on the control that produced it.
 
 ## Recommendations
 
-- Record policy decisions before state-changing tool calls, not only after success.
-- Prefer an independent recorder over agent self-logging for consequential actions.
-- Emit a tool-call decision record with acting principal, resource, and untrusted-input provenance.
-- Alert on allowed successes that lack a prior decision record, not only on errors and denials.
-- Keep a low-sensitivity decision trail long; put prompt content in a separate, access-logged store.
+- Record the policy decision before every consequential dispatch, including the acting identity, target, action, policy version and reason.
+- Correlate decision, dispatch and target records with a server-controlled operation identifier.
+- Keep the recorder and log store outside the agent's write authority, then monitor gaps, duplicates and broken ordering.
+- Treat transport success, tool acceptance and completed side effect as different outcomes.
+- Minimise sensitive content in the trail; protect access tokens, prompts and payloads separately.
+
+Related pattern: [Cross-Boundary Action Evidence](/patterns/cross-boundary-action-evidence/).
