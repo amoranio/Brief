@@ -1,40 +1,39 @@
 ---
 title: Memory without provenance is delayed authority
 date: 2026-09-15
-dek: A stored item without source metadata can later drive a tool call after the original context is gone.
+dek: A write that can steer later tool calls is a control-plane event. Without provenance and audit, you cannot govern what fires next.
 tags:
+  - logging
+  - governance
   - agents
-  - authorization
-  - data-security
   - threat-model
 sources:
   - https://www.microsoft.com/en-us/security/blog/2026/06/22/guarding-ai-memory/
   - https://www.cisa.gov/resources-tools/resources/careful-adoption-agentic-ai-services
+  - https://learn.microsoft.com/en-us/security/zero-trust/sfi/manage-agentic-memory-safety
 ---
 
-The session that wrote the memory is over. The tool call it enables has not happened yet.
+Persistent agent memory is not a convenience cache. It is a configuration layer that can change which tools the agent picks, what it refuses, and what it does days later when the original document or chat is gone.
 
-AI memory is sold as continuity: preferences, facts and working context that survive a conversation. Continuity is also a control-plane change. A stored item can shape later reasoning and tool selection after the user has left, after the untrusted document is closed, and after the original prompt is no longer on screen. If that item has no provenance, later sessions cannot tell a user preference from injected text.
+Microsoft’s Guarding AI memory research frames that gap as delayed tool invocation. An attacker plants instructions in content the assistant processes now. The agent takes no immediate action. Later, in an unrelated session, those instructions become a memory write, and the write triggers tool calls the user did not ask for in that moment. The blast radius is the memory store plus every identity and tool the agent can still reach. Microsoft’s guidance is blunt: gate every write on intent and provenance, treat retrieval as a risk decision, and emit full lifecycle audit so security teams can see create, read, update, and delete with source, identity, and time. In Microsoft 365 Copilot, that shows up as `MemoryUpdated` events joined into Defender and Sentinel hunts, plus Task Adherence checks on explicit memory writes.
 
-Microsoft’s June 2026 Guarding AI memory note makes the write-time requirement explicit: memory should be persisted only when it reflects legitimate user intent, is aligned to the service’s purpose, and carries metadata about where it came from. The same post describes delayed tool execution through adversarial memory poisoning as a hypothetical class of risk, not as a customer incident: untrusted content is processed without immediate action, then later retrieval updates memory and drives a tool. Copilot controls such as Task Adherence, injection classifiers and MemoryUpdated telemetry are product capabilities subject to configuration, licensing and service availability. They show the control surface. They do not prove that a given tenant has closed the residual.
-
-CISA’s Careful Adoption of Agentic AI Services guidance, issued with international partners on 1 May 2026, treats memory bases as part of the attack surface that can insert untrusted content into later context. It tells organisations not to grant agents broad or unrestricted access, especially to sensitive data or critical systems, and to keep privilege aligned with existing security models. Privilege evaluated only at deployment, and logs that look legitimate because the agent identity is trusted, are the same delayed-authority pattern: influence stored now, action taken later under a principal nobody re-checks.
+The Five Eyes Careful Adoption of Agentic AI Services guidance (CISA with ASD’s ACSC and partners, 1 May 2026) puts the same component on the critical path. Memory sits beside tools and planning in the agent architecture. Accountability fails when decision paths are opaque and logs do not record which memory shaped an action. For operations, the authoring agencies call out monitoring of memory interactions alongside prompts, tool calls, and decisions, and they treat comprehensive audit artefacts as a design requirement, not an optional dashboard.
 
 ```mermaid
-%% caption: Unattributed memory can be retrieved in a later session and drive a consequential action
+%% caption: Untrusted content can become durable memory that later steers tool calls
 flowchart TD
-  untrusted[Untrusted content] --> write[Memory write]
-  write --> store[Stored item without provenance]
-  store --> later[Later session retrieval]
-  later --> act[Tool call or preference]
+  content[Untrusted content] --> write[Memory write]
+  write --> store[Persistent memory]
+  store --> later[Later session]
+  later --> tools[Tool calls]
 ```
 
-Treat retrieved memory as candidate context, not as a standing grant. If you cannot show where an item came from, who intended it, and whether it is still in scope, it is not a preference. It is delayed authority.
+If a memory write can change later behaviour, it is a security event. Require provenance before persistence, re-check retrieved memory before it enters the prompt, and keep CRUD telemetry in the same SIEM path you use for privileged changes. Otherwise the residual is delayed authority you cannot attribute and cannot roll back.
 
 ## Recommendations
 
-- Gate memory writes on authenticated intent and recorded provenance; refuse persistence when source metadata is missing.
-- Isolate memory by user, agent and tenant with deterministic access control, not model instructions.
-- Re-evaluate retrieved items for freshness, relevance, tampering and caller scope before they enter the model or a tool path.
-- Keep memory operations in an independent audit trail: what changed, when, why, from where, and which later action used it.
-- Test delayed retrieval: plant an unattributed item, wait, and prove it cannot expand tool authority in a later session.
+- Label every memory entry with source, identity, timestamp, and model version before it can influence a tool call.
+- Block autonomous memory creation from untrusted documents or tool output unless a user-intent gate and content check both pass.
+- Treat retrieval as untrusted candidate context; re-evaluate freshness and injection before inject.
+- Log create, read, update, and delete for memory into the SOC SIEM with enough history to roll back a poison event.
+- Separate “memory enabled” from “memory governable” in risk language until provenance and audit are proven in production.
