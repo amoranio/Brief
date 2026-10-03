@@ -41,9 +41,3 @@ A process sandbox can still read sensitive material **inside** the permitted pro
 ## When to use
 
 Use for local MCP servers or agent tools that inspect or edit user workspaces, particularly when the UI implies that selecting a folder limits access. If a trusted remote service hosts the filesystem, enforce the same grant in its storage authorization layer instead of assuming a local OS sandbox exists.
-
-## Sources
-
-[1] https://modelcontextprotocol.io/specification/2026-07-28/client/roots
-[2] https://modelcontextprotocol.io/docs/2026-07-28/learn/client-concepts
-[3] https://modelcontextprotocol.io/specification/2026-07-28/deprecated
