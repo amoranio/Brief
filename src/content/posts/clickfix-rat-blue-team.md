@@ -237,4 +237,12 @@ Hashes rot the moment the attacker re-obfuscates. The durable framing is behavio
 
 Huntress found at least 40 incidents from this campaign's Google Sites domain — so this is not a theoretical writeup. It is one chain, decoded into the points where a blue team can actually react. Catch any single stage and the RAT never lands.
 
+## Recommendations
+
+- Alert on the process relationship, not the command: `powershell.exe` parent → `msiexec.exe` child with an MSI in `%TEMP%` and `/qn /norestart` is a chain worth blocking regardless of the file name.
+- Treat a signed EXE as a signed directory only if you also verify its neighbors: alert when a known-good signed host runs from `%LOCALAPPDATA%\Programs\` next to an unsigned or header-checksum-mismatched DLL.
+- Hunt persistence collisions, not single artifacts: a Run value and a scheduled task that share one non-system name and point into a fake product folder is the tell — and if a removal is undone within minutes, kill the process before deleting both points.
+- Do not rely on hash or filename IOCs — this campaign re-obfuscates per request and swaps signed hosts (Canon → Stardock). Build detections on the behaviors that carried over across both versions, including a media or package file being read by a non-browser process.
+- Enable and monitor PowerShell ScriptBlock logging and AMSI; this chain's in-memory stages are precisely the layers it tries to blind.
+
 *All samples and technique details from the linked Huntress analysis; MITRE mappings added for T1059/001 (PowerShell), T1574/002 (DLL side-loading), and T1547/001 (registry run keys).*
