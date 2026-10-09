@@ -35,6 +35,7 @@
 	--muted: #5c6570;
 	--rule: #e6e8ec;
 	--accent: #5e6ad2;
+	--red-team: #b42332;
 	--focus: #0b1220;
 	--sans: Geist, ui-sans-serif, system-ui, sans-serif;
 	--mono: 'Geist Mono', ui-monospace, 'SFMono-Regular', menlo, consolas, monospace;
@@ -65,6 +66,7 @@
 		--muted: rgba(240, 240, 250, 0.55);
 		--rule: rgba(240, 240, 250, 0.12);
 		--accent: #9aa3f0;
+	--red-team: #ff6876;
 		--focus: #f0f0fa;
 		color-scheme: dark;
 	}
@@ -76,6 +78,7 @@
 	--muted: rgba(240, 240, 250, 0.55);
 	--rule: rgba(240, 240, 250, 0.12);
 	--accent: #9aa3f0;
+	--red-team: #ff6876;
 	--focus: #f0f0fa;
 	color-scheme: dark;
 }
@@ -86,6 +89,7 @@
 	--muted: #5c6570;
 	--rule: #e6e8ec;
 	--accent: #5e6ad2;
+	--red-team: #b42332;
 	--focus: #0b1220;
 	color-scheme: light;
 }
@@ -216,6 +220,17 @@ a {
 	color: var(--accent);
 }
 
+.site-nav .nav-red-team,
+.site-nav .nav-red-team:hover,
+.site-nav .nav-red-team[aria-current='page'] {
+	color: var(--red-team);
+}
+
+.site-nav .nav-red-team:hover {
+	text-decoration: underline;
+	text-underline-offset: 0.22em;
+}
+
 .theme-toggle,
 .menu-toggle {
 	appearance: none;
@@ -340,17 +355,17 @@ h2 {
 	padding: 0;
 }
 
-.feed li {
+.feed > li {
 	border-top: 1px solid var(--rule);
 }
 
-.feed a {
+.feed .feed-entry {
 	display: block;
 	text-decoration: none;
-	padding: var(--space-6) 0;
+	padding: var(--space-6) 0 0;
 }
 
-.feed a:hover .feed-title {
+.feed .feed-entry:hover .feed-title {
 	color: var(--accent);
 }
 
@@ -372,6 +387,42 @@ h2 {
 .feed .dek {
 	margin: var(--space-3) 0 0;
 	max-width: 34rem;
+}
+
+.feed-tags {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0 var(--space-3);
+	list-style: none;
+	margin: var(--space-2) 0 0;
+	padding: 0 0 var(--space-6);
+	font-size: 0.6875rem;
+	font-weight: 500;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+}
+
+.feed-tags a {
+	display: inline-flex;
+	align-items: center;
+	min-height: 2rem;
+	color: var(--muted);
+	text-decoration: none;
+}
+
+.feed-tags a:hover {
+	color: var(--accent);
+	text-decoration: underline;
+	text-underline-offset: 0.18em;
+}
+
+.feed-tags .tag-red-team,
+.feed-tags .tag-red-team:hover,
+.tags a[href='/tags/red-team/'],
+.tags a[href='/tags/red-team/']:hover,
+.tag-index a[href='/tags/red-team/'],
+.tag-index a[href='/tags/red-team/']:hover {
+	color: var(--red-team);
 }
 
 .feed-kind {
