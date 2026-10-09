@@ -15,7 +15,7 @@ const { entries, showKind = false } = Astro.props;
 	{
 		entries.map((entry) => (
 			<li>
-				<a href={entry.href}>
+				<a class="feed-entry" href={entry.href}>
 					{showKind && entry.kind === 'pattern' && <span class="feed-kind">Pattern</span>}
 					<time class="feed-date" datetime={isoDate(entry.date)}>
 						{formatShortDate(entry.date)}
@@ -23,6 +23,15 @@ const { entries, showKind = false } = Astro.props;
 					<h2 class="feed-title">{entry.title}</h2>
 					<p class="dek">{entry.dek}</p>
 				</a>
+				<ul class="feed-tags" aria-label={`Tags for ${entry.title}`}>
+					{entry.tags.map((tag) => (
+						<li>
+							<a href={`/tags/${tag}/`} class={tag === 'red-team' ? 'tag-red-team' : undefined}>
+								{tag === 'red-team' ? 'Red Team' : tag}
+							</a>
+						</li>
+					))}
+				</ul>
 			</li>
 		))
 	}

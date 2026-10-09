@@ -52,6 +52,7 @@ function current(href: string, prefix = false): boolean {
 					<span class="wordmark-text">Brief.</span>
 				</a>
 				<nav id="site-nav" class="site-nav" aria-label="Site">
+					<a class="nav-red-team" href="/tags/red-team/" aria-current={current('/tags/red-team/') ? 'page' : undefined}>Red Team</a>
 					<a href="/patterns/" aria-current={current('/patterns/', true) ? 'page' : undefined}>
 						patterns
 					</a>
