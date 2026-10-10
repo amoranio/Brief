@@ -82,4 +82,6 @@ You cannot make the retriever understand intent. You can stop treating retrieved
 - Treat ingestion as a trust boundary: vet and monitor every source the pipeline embeds, since write access to one source is prompt-injection access.
 - Red-team the retrieval path by planting test documents in each ingestion source and checking whether they can steer a target query.
 
+Related pattern: [Retrieved Context Action Boundary](/patterns/retrieved-context-action-boundary/).
+
 *Attack mechanics from the linked PoisonedRAG (USENIX Security 2025) and CorruptRAG analyses; MITRE ATLAS mapping for AML.T0070 (RAG Poisoning, Persistence); OWASP LLM04 and LLM08 for the 2025 Top 10.*
