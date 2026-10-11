@@ -137,6 +137,8 @@ flowchart TD
 
 The naive reading is "model hallucinated a bad answer." The accurate one is *retrieval handed the model a forgery and the model had no reason to doubt it*. You harden the retrieval perimeter the way you'd harden any input boundary: provenance on everything indexed, write-path access control, vector-store tenancy, hash-verified baseline snapshots for drift detection, and a data/instruction gate at the exact point retrieved text becomes context. The chunk is not a source; it is an untrusted input that your pipeline chose to believe.
 
+Related pattern: [Retrieved Evidence Promotion Gate](/patterns/retrieved-evidence-promotion-gate/). It separates chunk provenance, model-visible evidence and service-owned action authorization; citation and screening alone cannot make hostile retrieved instructions safe.
+
 ## Recommendations
 
 - Treat ingestion as the security boundary, not inference: enforce provenance, allow-lists, and write-permission on every path that can land content in the retrieval corpus, and version the corpus so poisoning shows up as drift.
