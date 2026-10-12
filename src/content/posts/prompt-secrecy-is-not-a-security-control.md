@@ -115,6 +115,8 @@ flowchart TD
   sys -->|embedded secret| cred[Credential reuse / privilege escalation]
 ```
 
+Related pattern: [Prompt-Independent Action Authorization](/patterns/prompt-independent-action-authorization/).
+
 The user message and the system prompt occupy the same token stream, and the model's job is to reason over all of it. Adding "never reveal your system prompt" is just more tokens for the next extraction to fold into the override. The fix is to stop keeping things in the prompt that only a secret could protect — then a leak degrades to "the attacker read our instructions," which is embarrassing and useful to them, but not a credential dump and not an unlocked authorization boundary. Enforce the rules outside the model, store the secrets outside the context window, and let the prompt be the config it was always meant to be — boring, readable, and weaponless.
 
 ## Recommendations
