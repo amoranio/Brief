@@ -20,6 +20,7 @@ const names: Record<string, string> = {
 	'AML.T0011.002': 'Poisoned AI Agent Tool',
 	'AML.T0012': 'Valid Accounts',
 	'AML.T0018': 'Manipulate AI Model',
+	'AML.T0020': 'Poison Training Data',
 	'AML.T0034': 'Cost Harvesting',
 	'AML.T0034.002': 'Agentic Resource Consumption',
 	'AML.T0029': 'Denial of AI Service',
