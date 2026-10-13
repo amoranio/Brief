@@ -237,7 +237,8 @@ main,
 }
 
 .theme-toggle,
-.menu-toggle {
+.menu-toggle,
+.nav-search-button {
 	appearance: none;
 	margin: 0;
 	padding: 0;
@@ -252,13 +253,62 @@ main,
 }
 
 .theme-toggle:hover,
-.menu-toggle:hover {
+.menu-toggle:hover,
+.nav-search-button:hover {
 	opacity: 0.55;
 }
 
 .theme-toggle svg,
-.menu-toggle svg {
+.menu-toggle svg,
+.nav-search-button svg {
 	display: block;
+}
+
+/* Masthead search: a magnifying glass that expands into a field. */
+.nav-search {
+	display: flex;
+	align-items: center;
+}
+
+.nav-search-input {
+	appearance: none;
+	box-sizing: border-box;
+	inline-size: 0;
+	opacity: 0;
+	visibility: hidden;
+	margin: 0;
+	padding: 0;
+	font: inherit;
+	font-size: 0.9375rem;
+	letter-spacing: -0.02em;
+	color: var(--fg);
+	background: transparent;
+	border: 0;
+	border-bottom: 1px solid transparent;
+	border-radius: 0;
+	outline: none;
+	transition:
+		inline-size 0.22s ease,
+		opacity 0.18s ease,
+		border-color 0.18s ease,
+		visibility 0s linear 0.22s;
+}
+
+.nav-search.is-open .nav-search-input {
+	inline-size: min(15rem, 42vw);
+	opacity: 1;
+	visibility: visible;
+	padding: 0.35rem 0;
+	border-bottom-color: var(--fg);
+	transition-delay: 0s;
+}
+
+.nav-search-input::placeholder {
+	color: var(--muted);
+}
+
+.nav-search-input::-webkit-search-cancel-button {
+	appearance: none;
 }
 
 .icon-sun {
@@ -743,10 +793,27 @@ h2 {
 @media (max-width: 900px) {
 	.masthead {
 		flex-wrap: wrap;
+		position: relative;
 	}
 
 	.menu-toggle {
 		display: inline-grid;
+	}
+
+	/* On small screens the open field takes over the masthead row. */
+	.nav-search.is-open {
+		position: absolute;
+		inset-block-start: 0;
+		inset-inline: 0;
+		block-size: 2.75rem;
+		z-index: 2;
+		background: var(--bg);
+	}
+
+	.nav-search.is-open .nav-search-input {
+		flex: 1;
+		inline-size: auto;
+		min-inline-size: 0;
 	}
 
 	.site-nav {

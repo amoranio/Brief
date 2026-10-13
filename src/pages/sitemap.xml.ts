@@ -9,8 +9,6 @@ export async function GET(context: APIContext) {
 
 	const urls: { path: string; lastmod?: string }[] = [
 		{ path: '' },
-		{ path: 'about/' },
-		{ path: 'archive/' },
 		{ path: 'search/' },
 		{ path: 'frameworks/' },
 		{ path: 'patterns/' },
