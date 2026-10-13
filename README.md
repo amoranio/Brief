@@ -52,7 +52,7 @@ Patterns live in `src/content/patterns/` and are listed at `/patterns/`. They us
 
 ## Index, theme, and sitemap
 
-The masthead is a single bar: the locked **— Brief.** wordmark on the left, **patterns / archive / tags / about** on the right, plus a theme toggle. There is no persistent index rail.
+The masthead is a single bar: the locked **— Brief.** wordmark on the left, navigation on the right, plus a theme toggle. The navigation collapses to a menu on smaller screens. There is no persistent index rail.
 
 - Home is the post feed.
 - `/archive/` lists every post and pattern.
