@@ -15,6 +15,12 @@ sources:
   - https://atlas.mitre.org/techniques/AML.T0051.000
   - https://witness.ai/blog/llm-system-prompt-leakage/
   - https://safeguard.sh/resources/blog/llm-system-prompt-leakage
+frameworks:
+  atlas:
+    - AML.T0056
+    - AML.T0051.000
+  owaspLlm:
+    - LLM07
 ---
 
 The system prompt is the one thing you assume the model will never tell anyone. Everything else in a gen-AI app is borrowed authority; the system prompt is the placeholder where you banked the real rules. A banking chatbot's `You must never approve a transfer above $5,000` sits there not because the model enforces it well, but because putting it in the prompt felt like the natural place for the rule to live. It wasn't. That line is now a string an attacker can pull out and read, and once read, it stops being a boundary and becomes an inventory of what the app *thinks* it has locked down.

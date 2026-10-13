@@ -10,6 +10,17 @@ sources:
   - https://arxiv.org/abs/2608.15888
   - https://arxiv.org/html/2608.15888v1
   - https://github.com/aws-samples/sample-agentic-delegation
+frameworks:
+  atlas:
+    - AML.T0053
+    - AML.T0086
+  attack:
+    - T1567
+  owaspLlm:
+    - LLM06
+  owaspAgentic:
+    - ASI02
+    - ASI03
 ---
 
 An agent can be allowed to read confidential files and also to send external email. Each permission is fine on its own, but together they can still leak the files. That is a confused-deputy problem.

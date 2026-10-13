@@ -784,3 +784,101 @@ h2 {
 		transition: none;
 	}
 }
+
+/* Library: search and framework mappings */
+.search {
+	margin: 0 0 var(--space-5);
+}
+
+.search input {
+	width: 100%;
+	font: inherit;
+	font-size: var(--text-body);
+	color: var(--fg);
+	background: transparent;
+	border: 0;
+	border-bottom: 1px solid var(--rule);
+	border-radius: 0;
+	padding: var(--space-2) 0;
+	outline: none;
+}
+
+.search input:focus-visible {
+	border-bottom-color: var(--fg);
+}
+
+.search-count {
+	margin: 0 0 var(--space-5);
+	font-size: var(--text-meta);
+	color: var(--muted);
+}
+
+.feed .refs {
+	margin: var(--space-2) 0 0;
+	padding-bottom: var(--space-6);
+	font-family: var(--mono);
+	font-size: 0.6875rem;
+	letter-spacing: 0.04em;
+	color: var(--muted);
+}
+
+mark {
+	background: none;
+	color: inherit;
+	text-decoration: underline;
+	text-underline-offset: 0.18em;
+}
+
+.mapped {
+	font-family: var(--mono);
+	text-transform: none;
+	letter-spacing: 0;
+}
+
+.mapped .ext {
+	color: var(--muted);
+	font-family: var(--sans);
+}
+
+.framework {
+	margin-top: var(--space-6);
+}
+
+.framework-name {
+	margin: 0 0 var(--space-4);
+}
+
+.framework-ids,
+.framework-posts {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.framework-ids > li + li {
+	margin-top: var(--space-4);
+}
+
+.framework-id {
+	margin: 0;
+}
+
+.framework-id a {
+	font-family: var(--mono);
+	font-size: 0.88em;
+	color: var(--accent);
+	text-decoration: none;
+}
+
+.framework-posts {
+	color: var(--muted);
+	font-size: 0.95rem;
+}
+
+.framework-posts a {
+	text-decoration: none;
+}
+
+.framework-posts a:hover {
+	color: var(--accent);
+}

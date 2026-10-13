@@ -12,6 +12,13 @@ sources:
   - https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/policy-session-based-temporal.html
   - https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/use-gateway-with-policy.html
   - https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/policy-enforcement-modes.html
+frameworks:
+  atlas:
+    - AML.T0034
+  owaspLlm:
+    - LLM10
+  owaspAgentic:
+    - ASI02
 ---
 
 The first transfer is allowed. The second is blocked. Then the agent starts a new conversation and the counter reads zero again. Nothing has been hacked: the counter kept exactly the history it was designed to keep. The mistake was asking a conversation-scoped control to enforce an account-scoped budget.

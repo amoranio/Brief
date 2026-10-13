@@ -11,6 +11,16 @@ sources:
     - https://github.com/modelcontextprotocol/modelcontextprotocol/blob/main/docs/extensions/auth/enterprise-managed-authorization.mdx
     - https://support.claude.com/en/articles/15537633-authorize-mcp-connectors-for-your-entire-organization
     - https://claude.com/docs/connectors/building/enterprise-managed-auth
+frameworks:
+  atlas:
+    - AML.T0012
+    - AML.T0091
+    - AML.T0091.000
+  attack:
+    - T1078
+    - T1528
+  owaspAgentic:
+    - ASI03
 ---
 
 The MCP Enterprise-Managed Authorization extension is now stable, and Anthropic, Microsoft, Okta, and a first wave of servers have already adopted it. That is an architecture change, not a convenience feature.

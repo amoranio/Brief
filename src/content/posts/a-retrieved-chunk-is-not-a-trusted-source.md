@@ -19,6 +19,14 @@ sources:
   - https://arxiv.org/html/2604.05480
   - https://link.springer.com/chapter/10.1007/978-3-031-80853-1_31
   - https://repello.ai/blog/vector-embedding-security
+frameworks:
+  atlas:
+    - AML.T0051
+    - AML.T0070
+  owaspLlm:
+    - LLM01
+    - LLM04
+    - LLM08
 ---
 
 A RAG system writes its trust decision in advance. Before the model ever sees a user's question, retrieval picks "the documents that ground this answer," and the model is asked to treat that handoff as ground truth. The whole security posture of grounded generation rests on a single unstated claim: that the thing retrieval hands over was vetted. It wasn't. Retrieval ranks by embedding distance, not by authenticity. Whoever is closest in vector space wins the slot — and the model reads the winner as authority.

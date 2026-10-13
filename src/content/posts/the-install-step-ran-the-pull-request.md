@@ -12,6 +12,10 @@ sources:
   - https://docs.npmjs.com/cli/v11/commands/npm-ci/
   - https://docs.github.com/en/actions/reference/security/secure-use
   - https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/use-secrets
+frameworks:
+  attack:
+    - T1195
+    - T1195.002
 ---
 
 The attacker wants a runner to execute code before anyone reviews the proposed fix. They cannot edit the trusted workflow, but they can change a package manifest in the branch an AI coding assistant is about to check out. Their first move is not a prompt that says “ignore your instructions.” It is a perfectly ordinary `preinstall` entry. The assistant's next move—`npm ci` to validate the patch—does the work for them.

@@ -11,6 +11,8 @@ export async function GET(context: APIContext) {
 		{ path: '' },
 		{ path: 'about/' },
 		{ path: 'archive/' },
+		{ path: 'search/' },
+		{ path: 'frameworks/' },
 		{ path: 'patterns/' },
 		{ path: 'tags/' },
 		...posts.map((post) => ({

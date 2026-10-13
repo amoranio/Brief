@@ -11,6 +11,14 @@ sources:
   - https://www.microsoft.com/en-us/security/blog/2026/06/22/guarding-ai-memory/
   - https://www.cisa.gov/resources-tools/resources/careful-adoption-agentic-ai-services
   - https://learn.microsoft.com/en-us/security/zero-trust/sfi/manage-agentic-memory-safety
+frameworks:
+  atlas:
+    - AML.T0080
+    - AML.T0080.000
+  owaspLlm:
+    - LLM04
+  owaspAgentic:
+    - ASI06
 ---
 
 Persistent agent memory is not a convenience cache. It is a configuration layer that can change which tools the agent picks, what it refuses, and what it does days later when the original document or chat is gone.

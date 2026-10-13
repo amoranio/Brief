@@ -12,6 +12,12 @@ sources:
   - https://www.hiddenlayer.com/research/tokenization-attacks-on-llms-how-adversaries-exploit-ai-language-processing
   - https://www.microsoft.com/en-us/security/blog/2026/09/03/ascii-smuggling-crosses-over-from-ai-prompt-injection-to-phishing-evasion/
   - https://www.cohesity.com/platform/redlab/advisories/ai-prompt-injection/
+frameworks:
+  atlas:
+    - AML.T0054
+    - AML.T0068
+  owaspLlm:
+    - LLM01
 ---
 
 A blocklist that scans for forbidden words is a statement about the text a prompt looks like, not about what the model will do with it. Red teams measure the second one.

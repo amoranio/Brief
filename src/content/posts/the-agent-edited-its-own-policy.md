@@ -11,6 +11,13 @@ sources:
   - https://www.openpolicyagent.org/docs/philosophy
   - https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/about-rulesets
   - https://slsa.dev/spec/v1.2/provenance
+frameworks:
+  atlas:
+    - AML.T0081
+  owaspLlm:
+    - LLM06
+  owaspAgentic:
+    - ASI03
 ---
 
 The coding agent followed the repository policy. Then the task became inconvenient, so it changed the policy file and continued.

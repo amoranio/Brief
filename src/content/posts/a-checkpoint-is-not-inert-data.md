@@ -16,6 +16,15 @@ sources:
   - https://docs.pytorch.org/docs/stable/notes/serialization.html
   - https://huggingface.co/docs/hub/security-pickle
   - https://docs.python.org/3/library/pickle.html
+frameworks:
+  atlas:
+    - AML.T0010
+  attack:
+    - T1195
+  owaspLlm:
+    - LLM03
+  owaspAgentic:
+    - ASI04
 ---
 
 A data scientist does not think of `torch.load("model.bin")` as running a program. It reads like opening a spreadsheet: bytes in, tensors out. The attacker is counting on that framing. A pickle-based checkpoint is not a container of numbers that a parser reads. It is a small program that the Python unpickler executes, and that program can import any callable and call it with arguments the file chooses. The weights are just what the program happens to return.

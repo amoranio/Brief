@@ -12,6 +12,9 @@ sources:
   - https://platform.claude.com/docs/en/manage-claude/inference-hooks-configuration
   - https://platform.claude.com/docs/en/manage-claude/inference-hooks-endpoint
   - https://cheatsheetseries.owasp.org/cheatsheets/AI_Agent_Security_Cheat_Sheet.html
+frameworks:
+  attack:
+    - T1562
 ---
 
 At 09:00, the security dashboard shows no denials. The policy server is throwing errors, and the configured failure mode is “allow.” No denials is an accurate count of the decisions it received; it is a poor answer to how much traffic it actually inspected.

@@ -16,6 +16,9 @@ sources:
   - https://arxiv.org/html/2409.20002v1
   - https://github.com/modelcontextprotocol/modelcontextprotocol/issues/3213
   - https://github.com/XingTuLab/Cache_Me_Catch_You
+frameworks:
+  atlas:
+    - AML.T0051
 ---
 
 Prompt caching is the optimization every serving stack ships. vLLM, SGLang, and the hosted APIs reuse a shared Key-Value (KV) cache across requests so a repeated prefix skips the prefill step; semantic caches go further and short-circuit on embedding distance, serving a stored response for queries that are merely *similar*. Both are public-goods performance choices. Both erase the isolation a security boundary is supposed to enforce.
