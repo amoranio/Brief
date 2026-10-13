@@ -1,0 +1,27 @@
+---
+import type { Post } from '../lib/collection';
+import { frameworkRefs } from '../lib/frameworks';
+
+interface Props {
+	post: Post;
+}
+
+const refs = frameworkRefs(Astro.props.post);
+---
+
+{
+	refs.length > 0 && (
+		<ul class="tags mapped" aria-label="Mapped to">
+			{refs.map((ref) => (
+				<li>
+					<a href={`/search/?q=${encodeURIComponent(ref.id)}`} title={`Entries mapped to ${ref.id}`}>
+						{ref.id}
+					</a>{' '}
+					<a class="ext" href={ref.url} title={`${ref.id} · ${ref.name}`}>
+						{ref.name}
+					</a>
+				</li>
+			))}
+		</ul>
+	)
+}

@@ -1,0 +1,34 @@
+---
+import Base from '../layouts/Base.astro';
+import { getPosts } from '../lib/collection';
+import { frameworkIndex, frameworkLabels, frameworkName, frameworkOrder, frameworkUrl } from '../lib/frameworks';
+
+const index = frameworkIndex(await getPosts());
+---
+
+<Base title="Frameworks · Brief" description="The library by MITRE ATLAS, MITRE ATT&CK, and OWASP identifier.">
+	<h1>Frameworks</h1>
+	{
+		frameworkOrder.map((key) => (
+			<section class="framework">
+				<h2 class="framework-name">{frameworkLabels[key]}</h2>
+				<ul class="framework-ids">
+					{[...index[key]].map(([id, posts]) => (
+						<li>
+							<p class="framework-id">
+								<a href={frameworkUrl(key, id)}>{id}</a> {frameworkName(id)}
+							</p>
+							<ul class="framework-posts">
+								{posts.map((post) => (
+									<li>
+										<a href={`/${post.id}/`}>{post.data.title}</a>
+									</li>
+								))}
+							</ul>
+						</li>
+					))}
+				</ul>
+			</section>
+		))
+	}
+</Base>

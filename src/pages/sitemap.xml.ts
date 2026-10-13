@@ -9,6 +9,8 @@ export async function GET(context: APIContext) {
 	const urls: { path: string; lastmod?: string }[] = [
 		{ path: '' },
 		{ path: 'about/' },
+		{ path: 'search/' },
+		{ path: 'frameworks/' },
 		...posts.map((post) => ({
 			path: `${post.id}/`,
 			lastmod: isoDate(post.data.date),

@@ -7,7 +7,7 @@ export async function GET(context: APIContext) {
 
 	return rss({
 		title: 'Brief',
-		description: 'A short publication on AI security architecture and risk.',
+		description: 'A library of attacks on AI systems, mapped to MITRE ATLAS, MITRE ATT&CK, and OWASP.',
 		site: context.site!,
 		items: posts.map((post) => ({
 			title: post.data.title,

@@ -3,6 +3,7 @@ import { getCollection } from 'astro:content';
 import Base from '../../layouts/Base.astro';
 import { allTags, getPosts, isoDate, postsWithTag } from '../../lib/collection';
 import { formatDate } from '../../lib/dates';
+import { frameworkRefs } from '../../lib/frameworks';
 
 export async function getStaticPaths() {
 	const posts = await getCollection('posts');
@@ -20,7 +21,7 @@ const { tag } = Astro.props;
 const posts = postsWithTag(await getPosts(), tag);
 ---
 
-<Base title={`${tag} · Brief`} description={`Posts tagged ${tag}.`}>
+<Base title={`${tag} · Brief`} description={`Attacks tagged ${tag}.`}>
 	<p class="date">Tag</p>
 	<h1>{tag}</h1>
 	<ol class="posts">
@@ -33,6 +34,7 @@ const posts = postsWithTag(await getPosts(), tag);
 						</div>
 						<h2>{post.data.title}</h2>
 						<p class="dek">{post.data.dek}</p>
+						{frameworkRefs(post).length > 0 && <p class="refs">{frameworkRefs(post).map((r) => r.id).join(' · ')}</p>}
 					</a>
 				</li>
 			))

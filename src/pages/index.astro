@@ -2,11 +2,15 @@
 import Base from '../layouts/Base.astro';
 import { getPosts, isoDate } from '../lib/collection';
 import { formatDate } from '../lib/dates';
+import { frameworkRefs } from '../lib/frameworks';
 
 const posts = await getPosts();
 ---
 
-<Base title="Brief" description="A short publication on AI security architecture and risk.">
+<Base title="Brief" description="A library of attacks on AI systems, mapped to MITRE ATLAS, MITRE ATT&CK, and OWASP.">
+	<form class="search" role="search" action="/search/" method="get">
+		<input name="q" type="search" placeholder="Search attacks: keyword, tag, or ID such as AML.T0051" aria-label="Search the library" autocomplete="off" />
+	</form>
 	<ol class="posts">
 		{
 			posts.map((post) => (
@@ -17,6 +21,7 @@ const posts = await getPosts();
 						</div>
 						<h2>{post.data.title}</h2>
 						<p class="dek">{post.data.dek}</p>
+						{frameworkRefs(post).length > 0 && <p class="refs">{frameworkRefs(post).map((r) => r.id).join(' · ')}</p>}
 					</a>
 				</li>
 			))

@@ -1,7 +1,7 @@
 ---
 title: Deny has to mean deny
 date: 2026-08-30
-dek: Framework callbacks observe. A governance contract has to stop the action, including when the guard crashes.
+dek: Make the guard crash, time out, or sit on the wrong path, and a fail-open runtime runs the action anyway.
 tags:
   - governance
   - agents
@@ -9,9 +9,19 @@ tags:
 sources:
   - https://commandline.microsoft.com/agent-hooks-framework-neutral-ai-governance-contract/
   - https://github.com/responsibleai/agent-hooks
+frameworks:
+  atlas:
+    - AML.T0053
+  attack:
+    - T1562
+  owaspLlm:
+    - LLM06
+  owaspAgentic:
+    - ASI02
+    - ASI08
 ---
 
-Production agents have tools, credentials, and autonomy. Policies have to be enforced, approvals have to gate, and there has to be evidence of what ran. Most framework surfaces were built to observe that loop. Observation is not governance.
+Approval guards are only as strong as what happens when they fail. An attacker does not have to beat the guard. They have to make it throw.
 
 A support agent could look up accounts and issue refunds. Refunds over a threshold needed approval. The approval guard threw on a malformed request. The dispatcher caught it, logged a warning, and executed the refund — its documented default. A batch path never fired the callback at all. Nothing bound either guard to what actually ran.
 
@@ -27,22 +37,8 @@ flowchart LR
   end
 ```
 
-That is the failure class: a control attached to one path, while the runtime grows paths.
+That is the failure class: a control attached to one path, failing open, while the runtime grows paths. Callback systems make it worse. Observers cannot block, return values are discarded, exceptions are swallowed unless the author opts in, and filter order is not guaranteed, which decides whether redaction happens before egress.
 
-LangChain callbacks cannot block. Return values are discarded. Exceptions are swallowed unless the author sets `raise_error`. CrewAI's event bus is observe-only. LlamaIndex instrumentation is telemetry. Semantic Kernel filters can block, but dependency-injection order is not guaranteed, and order is what decides whether redaction happens before egress.
+Red team test: send malformed, oversized, and slow requests at every guard and watch whether the action still runs. Find the batch, retry, and resume paths and check each fires the same guard.
 
-Agent Hooks, specified as AGENT-HOOKS-0.1, is a small contract: eight interception points, three verdicts — allow, deny, transform. Escalation is a deny carrying an approval block. An unresolved escalate is still a deny. A host that cannot reach an interceptor, or that receives a malformed verdict, must synthesize deny.
-
-```mermaid
-%% caption: Three verdicts, and a crash is still a deny
-flowchart LR
-  action[Action] --> hook[Interceptor]
-  hook -->|allow| run[Execute]
-  hook -->|deny| stop[Stop]
-  hook -->|transform| rewrite[Rewrite]
-  crash[Crash or miss] --> stop
-```
-
-Approval binds to a SHA-256 of the canonical JSON of exactly what the approver saw. Replaying that approval against a mutated $8,400 refund fails. The identity changed. The deny stands.
-
-This is a cooperative contract, not a sandbox. A hostile host can skip points. A direct tool path may never hit `pre_tool_call`. Containing untrusted code is a sandbox's job. The contract's job is to make deny mean deny on the paths a cooperating host actually runs.
+The control is a contract where a crash is a deny. Three verdicts — allow, deny, transform. An unresolved escalation is a deny. An unreachable interceptor or malformed verdict synthesizes deny. Approval binds to a hash of exactly what the approver saw, so replaying it against a mutated $8,400 refund fails. That is cooperative, not a sandbox, but on the paths it covers, deny stands.

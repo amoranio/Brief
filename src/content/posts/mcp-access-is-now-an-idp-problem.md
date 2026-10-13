@@ -1,7 +1,7 @@
 ---
 title: MCP access is now an IdP problem
 date: 2026-08-29
-dek: Enterprise-managed auth moves the privilege decision off the consent screen and onto identity policy. The blast radius moves with it.
+dek: Enterprise-managed auth moves the privilege decision to identity policy. For an attacker, one over-broad policy or lax token check is the whole estate.
 tags:
   - identity
   - mcp
@@ -11,24 +11,34 @@ sources:
   - https://github.com/modelcontextprotocol/modelcontextprotocol/blob/main/docs/extensions/auth/enterprise-managed-authorization.mdx
   - https://support.claude.com/en/articles/15537633-authorize-mcp-connectors-for-your-entire-organization
   - https://claude.com/docs/connectors/building/enterprise-managed-auth
+frameworks:
+  atlas:
+    - AML.T0012
+    - AML.T0091
+    - AML.T0091.000
+  attack:
+    - T1078
+    - T1528
+  owaspAgentic:
+    - ASI03
 ---
 
-The MCP Enterprise-Managed Authorization extension is now stable. Anthropic, Microsoft, Okta, and a first wave of servers have adopted it. That is an architecture change, not a convenience feature.
+The MCP Enterprise-Managed Authorization extension is stable, and adopted. It changes where an attacker has to look.
 
-Until recently, most MCP access was a per-user, per-server OAuth consent. The privilege decision sat with the person in the chat. EMA moves it: the enterprise identity provider is the decision-maker. The client obtains an Identity Assertion JWT Authorization Grant (ID-JAG) from the IdP and exchanges it for an access token at the MCP server's authorization server. There is no per-server consent screen.
+Most MCP access used to be a per-user, per-server OAuth consent. EMA moves the decision to the enterprise identity provider. The client obtains an Identity Assertion JWT Authorization Grant (ID-JAG) from the IdP and exchanges it for an access token at the MCP server's authorization server. There is no consent screen to phish or fatigue. There is policy to abuse.
 
 ```mermaid
-%% caption: The privilege decision sits at the IdP, not on a consent screen
+%% caption: The privilege decision sits at the IdP, so that is where the attacker aims
 flowchart LR
   client[MCP client] --> idp[IdP policy]
   idp --> jag[ID-JAG]
   jag --> server[MCP server]
+  attacker[Attacker] -.-> idp
+  attacker -.-> server
 ```
 
-Three properties fall out of that. Admins authorize a server once and users inherit access by existing groups and roles. Revocation happens once at the IdP and applies everywhere. Removing the account picker makes it harder to spill data between a personal account and an enterprise one.
+Two targets fall out. First, the IdP allowlist and group mappings: an over-broad rule, a stale group, or a compromised account inherits every connector the group can reach, with revocation as the only brake. Second, the MCP server's authorization server: if it does not validate issuer, audience, expiry, subject, and tenant, a token minted for one place is accepted in another.
 
-The risk moves with the control. You are no longer reviewing a popup. You are reviewing an IdP allowlist, group mappings, and whether the MCP server's authorization server actually validates issuer, audience, expiry, subject, and tenant. A single over-broad IdP policy is now the blast radius.
+Red team test: from a low-privilege identity, list the connectors you inherit and use each. Replay a token against a server it was not issued for. Present expired, wrong-tenant, and wrong-audience assertions and see what is accepted.
 
-Anthropic's own note is the one to keep: Claude relays what the IdP issued. Scope and data access are still the identity provider's policy and the connected service's permissions, not Anthropic's.
-
-If your MCP estate is still "everyone clicks Allow", you do not have a connector problem. You have an identity boundary you have not designed.
+The control is boring and exact. Scope IdP policy per server and role, validate every claim at the authorization server, keep tokens short-lived, and alert on access to a server a user has never touched. Claude relays what the IdP issued. Scope is still the IdP's policy and the service's permissions.

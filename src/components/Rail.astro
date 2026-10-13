@@ -23,7 +23,7 @@ function here(href: string): boolean {
 		<label class="rail-hide" for="rail-collapse">Hide</label>
 	</div>
 
-	<p class="rail-kicker">Posts</p>
+	<p class="rail-kicker">Library</p>
 	<ol class="rail-posts">
 		{
 			posts.map((post) => {
@@ -58,6 +58,12 @@ function here(href: string): boolean {
 
 	<p class="rail-kicker">Site</p>
 	<ul class="rail-site">
+		<li>
+			<a href="/search/" aria-current={here('/search/') ? 'page' : undefined}>Search</a>
+		</li>
+		<li>
+			<a href="/frameworks/" aria-current={here('/frameworks/') ? 'page' : undefined}>Frameworks</a>
+		</li>
 		<li>
 			<a href="/about/" aria-current={here('/about/') ? 'page' : undefined}>About</a>
 		</li>

@@ -2,18 +2,22 @@
 import Base from '../layouts/Base.astro';
 ---
 
-<Base title="About · Brief" description="Brief is a daily, sourced publication on AI security architecture and risk.">
+<Base title="About · Brief" description="Brief is a library of attacks on AI systems, mapped to MITRE ATLAS, MITRE ATT&CK, and OWASP.">
 	<article class="about">
 		<h1>About</h1>
 		<p>
-			Brief is a daily publication on AI security architecture and risk: where authority sits, how
-			controls fail, and what changes when software can act.
+			Brief is a library of attacks on AI systems: how an attacker gets in, why it works, how a red
+			team tests it, and which control breaks it.
 		</p>
 		<p>
-			Each post takes one architectural point and follows it to the boundary — identity,
-			authorization, governance, tools, data, or runtime isolation. The aim is to make the control,
-			failure mode, and blast radius legible.
+			Each entry takes one technique and follows it to the boundary it crosses — identity,
+			authorization, tools, data, memory, or runtime isolation. Entries are mapped to MITRE ATLAS,
+			MITRE ATT&amp;CK, the OWASP Top 10 for LLM Applications, and the OWASP Top 10 for Agentic
+			Applications, so they line up with the frameworks your findings are reported against.
 		</p>
-		<p>Posts are short and sourced. No roundups. No vendor pitches. No motivational takes.</p>
+		<p>
+			Entries are short and sourced. Technique level, not payloads. No roundups. No vendor pitches.
+			Search by keyword, tag, or identifier.
+		</p>
 	</article>
 </Base>
