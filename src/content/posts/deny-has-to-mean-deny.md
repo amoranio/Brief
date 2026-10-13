@@ -9,6 +9,15 @@ tags:
 sources:
   - https://commandline.microsoft.com/agent-hooks-framework-neutral-ai-governance-contract/
   - https://github.com/responsibleai/agent-hooks
+frameworks:
+  atlas:
+    - AML.T0053
+  attack:
+    - T1562
+  owaspLlm:
+    - LLM06
+  owaspAgentic:
+    - ASI02
 ---
 
 Production agents have tools, credentials, and autonomy, which means policies have to be enforced. An approval has to stop the action until a human lifts it, and there has to be evidence of what ran. Most framework callbacks were built to watch that loop, and watching is not governance.

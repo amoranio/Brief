@@ -10,6 +10,14 @@ tags:
 sources:
   - https://workos.com/blog/what-is-mcp-authorization
   - https://modelcontextprotocol.io/specification/2025-06-18/basic/authorization
+frameworks:
+  atlas:
+    - AML.T0091
+    - AML.T0091.000
+  attack:
+    - T1528
+  owaspAgentic:
+    - ASI03
 ---
 
 A bearer token that verifies under the right issuer is still not a grant for this server.

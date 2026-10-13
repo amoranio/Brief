@@ -15,6 +15,14 @@ sources:
   - https://www.anthropic.com/engineering/how-we-contain-claude
   - https://zylos.ai/research/2026-04-12-indirect-prompt-injection-defenses-agents-untrusted-content/
   - https://www.sysdig.com/learn-cloud-native/prompt-injection
+frameworks:
+  atlas:
+    - AML.T0051
+    - AML.T0051.001
+  owaspLlm:
+    - LLM01
+  owaspAgentic:
+    - ASI01
 ---
 
 A direct prompt injection arrives through the user. You can filter it, gate it, audit it. Tool-output injection arrives through a function call the agent chose to make, and the model reads the bytes the way it reads a system message: as ground truth about the world.

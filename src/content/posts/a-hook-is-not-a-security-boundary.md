@@ -9,6 +9,15 @@ tags:
 sources:
   - https://commandline.microsoft.com/agent-hooks-framework-neutral-ai-governance-contract/
   - https://github.com/responsibleai/agent-hooks
+frameworks:
+  atlas:
+    - AML.T0053
+  attack:
+    - T1562
+  owaspLlm:
+    - LLM06
+  owaspAgentic:
+    - ASI02
 ---
 
 Agent Hooks is a contract between a host and a set of interceptors. It can prove that a host stopped an action, but only if the host actually asks the contract first.

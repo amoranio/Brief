@@ -1,0 +1,129 @@
+---
+import Base from '../layouts/Base.astro';
+---
+
+<Base title="Search · Brief" description="Search the library by keyword, tag, or MITRE and OWASP identifier.">
+	<p class="kicker">Index</p>
+	<h1>Search</h1>
+	<form class="search" role="search" action="/search/" method="get">
+		<input
+			id="q"
+			name="q"
+			type="search"
+			placeholder="Keyword, tag, or ID: exfiltration, mcp, AML.T0051, LLM01"
+			autocomplete="off"
+			spellcheck="false"
+			aria-label="Search the library"
+		/>
+	</form>
+	<p class="search-count" id="count" aria-live="polite"></p>
+	<ol class="feed" id="results"></ol>
+	<noscript>
+		<p class="dek">Search needs JavaScript. Browse the <a href="/">library</a> or <a href="/frameworks/">frameworks</a> instead.</p>
+	</noscript>
+</Base>
+
+<script>
+	type Entry = {
+		href: string;
+		kind: string;
+		title: string;
+		dek: string;
+		date: string;
+		tags: string[];
+		ids: string[];
+		names: string[];
+		text: string;
+	};
+
+	const input = document.getElementById('q') as HTMLInputElement;
+	const results = document.getElementById('results') as HTMLOListElement;
+	const count = document.getElementById('count') as HTMLElement;
+	const fmt = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' });
+
+	let entries: Entry[] = [];
+
+	const escape = (s: string) =>
+		s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
+
+	const terms = (q: string) => q.toLowerCase().split(/[\s,]+/).filter(Boolean);
+
+	function wordStarts(hay: string, term: string): boolean {
+		let i = hay.indexOf(term);
+		while (i !== -1) {
+			if (i === 0 || !/[a-z0-9]/.test(hay[i - 1])) return true;
+			i = hay.indexOf(term, i + 1);
+		}
+		return false;
+	}
+
+	function score(e: Entry, ts: string[]): number {
+		const title = e.title.toLowerCase();
+		const ids = e.ids.map((s) => s.toLowerCase());
+		const fw = e.names.join(' ').toLowerCase();
+		const tags = e.tags.join(' ').toLowerCase();
+		const dek = e.dek.toLowerCase();
+		const text = e.text.toLowerCase();
+		let total = 0;
+		for (const t of ts) {
+			let s = 0;
+			if (wordStarts(title, t)) s += 10;
+			if (ids.some((id) => id.startsWith(t) || id.replace('aml.', '').startsWith(t))) s += 9;
+			if (wordStarts(fw, t)) s += 6;
+			if (e.tags.some((tag) => tag.startsWith(t)) || wordStarts(tags, t)) s += 6;
+			if (wordStarts(dek, t)) s += 4;
+			if (wordStarts(text, t)) s += 1;
+			if (s === 0) return 0;
+			total += s;
+		}
+		return total;
+	}
+
+	function highlight(s: string, ts: string[]): string {
+		let out = escape(s);
+		for (const t of ts) {
+			const re = new RegExp(`(^|[^a-z0-9])(${t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+			out = out.replace(re, '$1<mark>$2</mark>');
+		}
+		return out;
+	}
+
+	function render() {
+		const q = input.value.trim();
+		const ts = terms(q);
+		const url = new URL(location.href);
+		if (q) url.searchParams.set('q', q);
+		else url.searchParams.delete('q');
+		history.replaceState(null, '', url);
+
+		const hits = (ts.length ? entries.map((e) => ({ e, s: score(e, ts) })).filter((h) => h.s > 0) : entries.map((e) => ({ e, s: 0 })))
+			.sort((a, b) => b.s - a.s || b.e.date.localeCompare(a.e.date));
+
+		count.textContent = ts.length ? `${hits.length} ${hits.length === 1 ? 'entry' : 'entries'} for “${q}”` : `${entries.length} entries`;
+		results.innerHTML = hits
+			.map(({ e }) => {
+				const refs = e.ids.length ? `<p class="refs">${e.ids.map(escape).join(' · ')}</p>` : '';
+				const kind = e.kind === 'pattern' ? '<span class="feed-kind">Pattern</span>' : '';
+				return `<li><a class="feed-entry" href="${e.href}">${kind}<time class="feed-date" datetime="${e.date}">${fmt.format(new Date(e.date))}</time><h2 class="feed-title">${highlight(e.title, ts)}</h2><p class="dek">${highlight(e.dek, ts)}</p>${refs}</a></li>`;
+			})
+			.join('');
+		if (ts.length && hits.length === 0) {
+			results.innerHTML = '<li><p class="dek" style="padding-top:var(--space-6)">Nothing matches. Try a broader keyword, a tag such as <a href="/tags/mcp/">mcp</a>, or an ID such as AML.T0051.</p></li>';
+		}
+	}
+
+	input.value = new URL(location.href).searchParams.get('q') ?? '';
+	fetch('/search.json')
+		.then((r) => r.json())
+		.then((data: Entry[]) => {
+			entries = data;
+			render();
+		});
+	input.addEventListener('input', render);
+	document.addEventListener('keydown', (ev) => {
+		if (ev.key === '/' && document.activeElement !== input && !(ev.target instanceof HTMLInputElement)) {
+			ev.preventDefault();
+			input.focus();
+		}
+	});
+</script>

@@ -13,6 +13,13 @@ sources:
   - https://arxiv.org/abs/2604.12371
   - https://arxiv.org/abs/2610.09240
   - https://arxiv.org/abs/2503.10809
+frameworks:
+  atlas:
+    - AML.T0051.001
+  owaspLlm:
+    - LLM01
+  owaspAgentic:
+    - ASI01
 ---
 
 A text filter can be told apart from the model it guards. A screenshot cannot. When an agent's perception is a vision-language model (VLM), the pixels it reads are not evidence about the world — they are the prompt. An attacker who controls any image the agent will look at controls the instruction stream, and the usual text-only safety layers never see a word of it.

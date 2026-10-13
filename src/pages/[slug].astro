@@ -2,6 +2,7 @@
 import { getCollection, render } from 'astro:content';
 import type { CollectionEntry } from 'astro:content';
 import Base from '../layouts/Base.astro';
+import Mapped from '../components/Mapped.astro';
 import { isoDate } from '../lib/collection';
 import { formatDate } from '../lib/dates';
 
@@ -36,6 +37,7 @@ const { Content } = await render(post);
 				))
 			}
 		</ul>
+		<Mapped post={post} />
 		<div class="body">
 			<Content />
 		</div>

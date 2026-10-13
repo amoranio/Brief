@@ -16,6 +16,13 @@ sources:
   - https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/
   - https://atlas.mitre.org/techniques/AML.T0051
   - https://genai.owasp.org/llmrisk/llm01-prompt-injection/
+frameworks:
+  atlas:
+    - AML.T0051.001
+  owaspLlm:
+    - LLM06
+  owaspAgentic:
+    - ASI02
 ---
 
 The support ticket arrives at 9:41 a.m.: "I was charged three times." The trace looks clean. One user message, one planner turn, three calls to `charge_card` — each with a distinct tool-use ID, each returning 200, each writing a different Stripe charge. The tool has an idempotency key. The backend has a dedup table. The payment processor honors `Idempotency-Key`. Every layer is idempotent. The customer still paid three times.

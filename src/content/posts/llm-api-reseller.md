@@ -14,6 +14,9 @@ sources:
   - https://cybersecuritynews.com/solo-hacker-used-ai-tools/
   - https://attack.mitre.org/techniques/T1588/007/
   - https://attack.mitre.org/techniques/T1090/
+frameworks:
+  owaspLlm:
+    - LLM03
 ---
 
 When CrowdStrike pulled apart the [South Korea financial campaign](https://www.crowdstrike.com/en-us/blog/unknown-threat-actor-uses-artex-to-target-south-korean-finance/) that ran from late September to early October 2026, the headline was the tooling: an open-source agentic pentesting framework called ARTEX, driving DeepSeek, GLM and Grok against multiple banks. But the detail that matters most for defenders is smaller and easier to miss. The operator did not call DeepSeek directly. They reached it through `xcai[.]pro`, a likely LLM API proxy and reseller.

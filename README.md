@@ -20,6 +20,15 @@ tags:
   - authorization
 sources:
   - https://example.com/source
+frameworks:
+  atlas:
+    - AML.T0051
+  attack:
+    - T1567
+  owaspLlm:
+    - LLM01
+  owaspAgentic:
+    - ASI01
 ---
 
 Body in Markdown.
@@ -29,7 +38,13 @@ Body in Markdown.
 
 When a post explains a control, include a Mermaid `flowchart` in the Markdown. Diagrams compile to inline SVG at build time. Add `%% caption: …` so the SVG has an accessible name.
 
+`frameworks` is optional and each list may be omitted. IDs are validated at build time: ATLAS `AML.T####` (or `.###`), ATT&CK `T####` (or `.###`), OWASP LLM `LLM01`–`LLM10`, OWASP Agentic `ASI01`–`ASI10`. Every ID used must also be named in `src/lib/frameworks.ts`, which supplies the display name and link. Verify new IDs against the official MITRE and OWASP pages.
+
 Then `npm run build` to confirm the site builds. A push or merge to `main` publishes it.
+
+## Search and frameworks
+
+`/search/` filters posts and patterns client-side from `/search.json` (title, dek, tags, framework IDs and names, body). Queries are keywords or IDs (`exfil`, `mcp`, `AML.T0051`, `llm01`); every term must match. `?q=` deep-links a query; `/` focuses the box. `/frameworks/` lists entries by framework ID. Posts not yet mapped still appear in search.
 
 ## Patterns
 

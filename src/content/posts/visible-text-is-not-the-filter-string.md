@@ -10,6 +10,12 @@ tags:
 sources:
   - https://www.microsoft.com/en-us/security/blog/2026/09/03/ascii-smuggling-crosses-over-from-ai-prompt-injection-to-phishing-evasion/
   - https://www.fortra.com/blog/attackers-exploit-activecampaign-deliver-thousands-ai-generated-sba-phish
+frameworks:
+  atlas:
+    - AML.T0068
+    - AML.T0051
+  owaspLlm:
+    - LLM01
 ---
 
 The word on the screen is not the byte sequence the filter matches. The residual is treating font-rendered text as the security surface.

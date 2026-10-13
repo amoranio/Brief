@@ -14,6 +14,14 @@ const posts = defineCollection({
 		dek: z.string(),
 		tags: z.array(tag).min(1),
 		sources: z.array(z.string().url()).default([]),
+		frameworks: z
+			.object({
+				atlas: z.array(z.string().regex(/^AML\.T\d{4}(\.\d{3})?$/)).default([]),
+				attack: z.array(z.string().regex(/^T\d{4}(\.\d{3})?$/)).default([]),
+				owaspLlm: z.array(z.string().regex(/^LLM(0[1-9]|10)$/)).default([]),
+				owaspAgentic: z.array(z.string().regex(/^ASI(0[1-9]|10)$/)).default([]),
+			})
+			.default({ atlas: [], attack: [], owaspLlm: [], owaspAgentic: [] }),
 	}),
 });
 
