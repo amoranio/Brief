@@ -52,14 +52,14 @@ Patterns live in `src/content/patterns/` and are listed at `/patterns/`. They us
 
 ## Index, theme, and sitemap
 
-The masthead is a single bar: the locked **— Brief.** wordmark on the left, navigation on the right, plus a theme toggle. The navigation collapses to a menu on smaller screens. There is no persistent index rail.
+The masthead is a single bar: the locked **— Brief.** wordmark on the left, navigation on the right, a theme toggle, and a magnifying-glass search at the far right. The glass expands into a field; Enter, or the glass again, opens `/search/?q=…`. `/` also opens it. The navigation collapses to a menu on smaller screens. There is no persistent index rail.
 
 - Home is the post feed.
-- `/archive/` lists every post and pattern.
+- `/archive/` lists every post and pattern, but is hidden: no navigation link, no sitemap entry, `noindex`.
 - `/tags/` lists every tag used by posts or patterns.
 - Theme follows `prefers-color-scheme` on first visit (dark system → black canvas). The toggle writes `brief-theme` to `localStorage` and then wins.
 
-`/sitemap.xml` covers home, About, Archive, Tags, posts, patterns, and tag pages.
+`/sitemap.xml` covers home, Search, Frameworks, Patterns, Tags, posts, pattern pages, and tag pages. `/archive/` is unlisted: it is not linked, not in the sitemap, and is marked `noindex`.
 
 ## Commands
 

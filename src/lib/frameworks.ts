@@ -23,6 +23,8 @@ const names: Record<string, string> = {
 	'AML.T0020': 'Poison Training Data',
 	'AML.T0034': 'Cost Harvesting',
 	'AML.T0034.002': 'Agentic Resource Consumption',
+	'AML.T0024': 'Exfiltration via AI Inference API',
+	'AML.T0024.002': 'Extract AI Model',
 	'AML.T0029': 'Denial of AI Service',
 	'AML.T0051': 'LLM Prompt Injection',
 	'AML.T0051.000': 'Direct',
