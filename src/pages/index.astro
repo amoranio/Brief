@@ -8,8 +8,5 @@ const posts = await getPosts();
 
 <Base title="Brief" description="A short publication on AI security architecture and risk.">
 	<h1 class="visually-hidden">Brief</h1>
-	<form class="search" role="search" action="/search/" method="get">
-		<input name="q" type="search" placeholder="Search attacks: keyword, tag, or ID such as AML.T0051" aria-label="Search the library" autocomplete="off" />
-	</form>
 	<Feed entries={posts.map(asTaggedPost)} />
 </Base>
